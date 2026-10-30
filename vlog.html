@@ -1,0 +1,613 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinguaView - Vlog 学习</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="js/theme.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Noto Sans SC', sans-serif; background: var(--bg-primary); color: var(--text-primary); -webkit-tap-highlight-color: transparent; }
+
+    /* ===== 上下滑动主容器：占满导航栏以下可视区 ===== */
+    .vlog-feed {
+      position: fixed;
+      top: 58px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow-y: auto;
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+    .vlog-feed::-webkit-scrollbar { display: none; }
+
+    .vlog-slide {
+      height: 100%;
+      min-height: 100%;
+      max-width: 560px;
+      margin: 0 auto;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 视频区 */
+    .slide-media {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-md);
+    }
+    .slide-media video {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: contain; background: #000;
+    }
+    .slide-placeholder {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px; cursor: pointer;
+      background: linear-gradient(135deg, #1e293b, #0f172a 50%, #1e1b4b);
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .slide-placeholder .big-play {
+      width: 76px; height: 76px; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15); border: 3px solid rgba(255, 255, 255, 0.85);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; color: #fff; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      transition: transform 0.3s ease;
+    }
+    .slide-placeholder:hover .big-play { transform: scale(1.1); background: var(--primary-color); border-color: var(--primary-color); }
+    .slide-placeholder .ph-title { font-size: 20px; font-weight: 700; color: #fff; text-align: center; padding: 0 20px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); }
+    .slide-placeholder .ph-hint { font-size: 13px; color: rgba(255, 255, 255, 0.7); display: flex; align-items: center; gap: 6px; }
+
+    /* 播放进度条（视频底部） */
+    .progress-mini { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255,255,255,0.18); z-index: 2; }
+    .progress-mini .fill { height: 100%; background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end)); width: 0; }
+
+    /* 右侧上下切换导航 */
+    .slide-nav {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      display: flex; flex-direction: column; gap: 10px; z-index: 3;
+    }
+    .nav-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.4); background: rgba(0,0,0,0.35);
+      color: #fff; cursor: pointer; backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;
+    }
+    .nav-btn:hover { background: var(--primary-color); border-color: var(--primary-color); }
+    .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* 底部信息与操作条 */
+    .slide-bar {
+      display: flex; align-items: center; gap: 10px; padding: 10px 2px 8px;
+    }
+    .slide-btn {
+      border: none; cursor: pointer; border-radius: 50%;
+      width: 42px; height: 42px; background: var(--bg-card); color: var(--text-primary);
+      display: flex; align-items: center; justify-content: center; font-size: 15px;
+      border: 1px solid var(--border-color); transition: all 0.2s ease; flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+    }
+    .slide-btn:hover { background: var(--primary-color); color: #fff; }
+    .slide-title-wrap { flex: 1; min-width: 0; }
+    .slide-title { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .slide-meta { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+    .slide-meta .level-tag { padding: 1px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; color: #fff; }
+
+    .subtitle-toggle-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 9px 14px; border: none; border-radius: var(--radius-sm); cursor: pointer;
+      background: var(--accent-bg); color: var(--primary-color); font-size: 13px; font-weight: 600;
+      transition: all 0.2s ease; white-space: nowrap; flex-shrink: 0;
+    }
+    .subtitle-toggle-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .subtitle-toggle-btn.active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: #fff; }
+
+    /* 底部字幕抽屉 */
+    .slide-subs {
+      position: relative;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+    }
+    .slide-subs.open { max-height: 50vh; }
+    .slide-subs-inner { display: flex; flex-direction: column; height: 50vh; }
+
+    .subs-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; border-bottom: 1px solid var(--border-color); flex-shrink: 0;
+    }
+    .transcribe-toggle-group { display: flex; gap: 4px; background: var(--bg-input); padding: 3px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); }
+    .transcribe-toggle-btn {
+      padding: 6px 12px; border: none; border-radius: 8px; cursor: pointer;
+      background: transparent; color: var(--text-secondary); font-size: 12px; font-weight: 600; transition: all 0.2s;
+    }
+    .transcribe-toggle-btn.active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: #fff; }
+    .subs-count { font-size: 12px; color: var(--text-muted); }
+
+    .subs-list { flex: 1; overflow-y: auto; padding: 8px; }
+    .subs-list::-webkit-scrollbar { width: 6px; }
+    .subs-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+    .subs-list::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    .subs-item {
+      padding: 12px 14px; margin-bottom: 4px; border-radius: var(--radius-sm);
+      cursor: pointer; border-left: 3px solid transparent; transition: all 0.2s ease;
+    }
+    .subs-item:hover { background: var(--accent-bg); }
+    .subs-item.active { background: linear-gradient(135deg, rgba(88, 101, 242, 0.12), rgba(59, 130, 246, 0.06)); border-left-color: var(--primary-color); }
+    .subs-item .t { font-size: 10px; color: var(--text-muted); font-variant-numeric: tabular-nums; margin-bottom: 4px; }
+    .subs-item .en { font-size: 14px; color: var(--text-primary); line-height: 1.6; }
+    .subs-item .zh { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-top: 4px; display: none; }
+    .slide-subs.translated .subs-item .zh { display: block; animation: fadeIn 0.3s ease; }
+
+    .subs-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Toast 提示 */
+    .toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: rgba(17, 24, 39, 0.92); color: #fff; padding: 12px 22px; border-radius: 10px;
+      font-size: 14px; z-index: 9999; opacity: 0; pointer-events: none;
+      transition: all 0.35s ease; backdrop-filter: blur(12px);
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.1);
+      max-width: 90vw; text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 600px) {
+      .vlog-feed { top: 54px; }
+      .vlog-slide { padding: 8px 10px 8px; }
+      .slide-nav { right: 6px; }
+      .slide-title { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand"><svg class="brand-logo" style="flex-shrink:0; filter:drop-shadow(0 2px 6px rgba(59,130,246,0.3));" viewBox="0 0 36 36" width="28" height="28" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lv-grad" x1="0" y1="0" x2="36" y2="36"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs><path d="M3 7a3 3 0 0 1 3-3h24a3 3 0 0 1 3 3v16a3 3 0 0 1-3 3H17l-7 5v-5H6a3 3 0 0 1-3-3V7z" fill="url(#lv-grad)"/><rect x="11" y="12" width="3" height="11" rx="1.2" fill="white"/><rect x="11" y="19.5" width="9" height="3" rx="1.2" fill="white"/><circle cx="24" cy="13" r="2.2" fill="white"/></svg>LinguaView</a>
+    <ul class="navbar-links">
+      <li><a href="index.html">首页</a></li>
+      <li><a href="catalog.html">学习目录</a></li>
+      <li><a href="learn.html">精听练习</a></li>
+      <li><a href="使用指南.html">使用指南</a></li>
+    </ul>
+    <button class="theme-toggle" onclick="toggleTheme()" title="切换深色模式">
+      <i class="fa-solid fa-moon"></i>
+      <i class="fa-solid fa-sun"></i>
+    </button>
+    <button class="hamburger" onclick="toggleMobileMenu()" title="菜单">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html">首页</a>
+    <a href="catalog.html">学习目录</a>
+    <a href="learn.html">精听练习</a>
+    <a href="使用指南.html">使用指南</a>
+  </div>
+
+  <!-- 上下滑动视频流 -->
+  <div class="vlog-feed" id="videoFeed"></div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Vlog 视频数据
+    const vlogVideos = [
+      {
+        id: 1,
+        title: 'My Morning Routine',
+        level: 'A2',
+        levelColor: '#3b82f6',
+        duration: '3:20',
+        gradient: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+        icon: 'fa-mug-hot',
+        subtitles: [
+          { start: 0, end: 4, en: 'Hey everyone, welcome back to my channel!', zh: '大家好，欢迎回到我的频道！' },
+          { start: 4, end: 8, en: 'Today I\'m going to share my morning routine with you.', zh: '今天我要和大家分享我的早晨日常。' },
+          { start: 8, end: 12, en: 'I usually wake up around 6:30 in the morning.', zh: '我通常在早上6:30左右醒来。' },
+          { start: 12, end: 16, en: 'The first thing I do is drink a glass of warm water.', zh: '我做的第一件事就是喝一杯温水。' },
+          { start: 16, end: 20, en: 'It helps me wake up and feel refreshed.', zh: '它帮助我清醒过来，感觉神清气爽。' },
+          { start: 20, end: 24, en: 'Then I like to do some light stretching exercises.', zh: '然后我喜欢做一些轻松的拉伸运动。' },
+          { start: 24, end: 28, en: 'It\'s a great way to start the day with energy.', zh: '这是充满活力地开始新一天的好方法。' },
+          { start: 28, end: 32, en: 'After that, I head to the kitchen to make breakfast.', zh: '之后，我去厨房做早餐。' },
+          { start: 32, end: 36, en: 'My favorite breakfast is oatmeal with fruits and nuts.', zh: '我最喜欢的早餐是加了水果和坚果的燕麦粥。' },
+          { start: 36, end: 40, en: 'It\'s healthy and keeps me full until lunch.', zh: '它很健康，能让我一直饱到午餐。' },
+          { start: 40, end: 44, en: 'While eating, I usually check my emails and messages.', zh: '吃饭时，我通常会查看邮件和消息。' },
+          { start: 44, end: 48, en: 'But I try not to spend too much time on my phone.', zh: '但我尽量不在手机上花太多时间。' },
+          { start: 48, end: 52, en: 'Next, I take a shower and get dressed for the day.', zh: '接下来，我洗个澡然后换好衣服。' },
+          { start: 52, end: 56, en: 'I like to pick out my clothes the night before.', zh: '我喜欢前一天晚上把衣服选好。' },
+          { start: 56, end: 60, en: 'It saves me a lot of time in the morning.', zh: '这帮我在早上省了很多时间。' },
+          { start: 60, end: 64, en: 'Before leaving, I always double-check my bag.', zh: '出门前，我总是再检查一遍我的包。' },
+          { start: 64, end: 68, en: 'Keys, wallet, phone, and laptop — everything I need.', zh: '钥匙、钱包、手机和笔记本电脑——我需要的一切。' },
+          { start: 68, end: 72, en: 'And that\'s my morning routine! Thanks for watching.', zh: '这就是我的早晨日常！感谢观看。' }
+        ]
+      },
+      {
+        id: 2,
+        title: 'A Day in New York City',
+        level: 'B1',
+        levelColor: '#8b5cf6',
+        duration: '4:10',
+        gradient: 'linear-gradient(135deg, #8b5cf6, #3b82f6)',
+        icon: 'fa-city',
+        subtitles: [
+          { start: 0, end: 4, en: 'Welcome to New York City, the city that never sleeps!', zh: '欢迎来到纽约，这座不眠之城！' },
+          { start: 4, end: 8, en: 'Today I\'m taking you on a tour of my favorite spots.', zh: '今天我要带你们参观我最喜欢的地方。' },
+          { start: 8, end: 12, en: 'We\'re starting at Central Park, right in the heart of Manhattan.', zh: '我们从曼哈顿中心中央公园开始。' },
+          { start: 12, end: 16, en: 'This park is massive — over 800 acres of green space.', zh: '这个公园非常大——超过800英亩的绿地。' },
+          { start: 16, end: 20, en: 'It\'s a perfect escape from the busy city streets.', zh: '这是逃离繁忙城市街道的完美去处。' },
+          { start: 20, end: 24, en: 'Locals come here to jog, picnic, or just relax.', zh: '当地人来这里跑步、野餐或者只是放松。' },
+          { start: 24, end: 28, en: 'Next, we\'re heading to Times Square.', zh: '接下来，我们要去时代广场。' },
+          { start: 28, end: 32, en: 'The neon lights here are absolutely breathtaking at night.', zh: '这里的霓虹灯在夜晚简直令人叹为观止。' },
+          { start: 32, end: 36, en: 'It\'s one of the most visited tourist attractions in the world.', zh: '它是世界上游客最多的旅游景点之一。' },
+          { start: 36, end: 40, en: 'Now let\'s grab some lunch at a classic New York deli.', zh: '现在我们去一家经典的纽约熟食店吃午饭。' },
+          { start: 40, end: 44, en: 'You can\'t visit NYC without trying a pastrami sandwich.', zh: '来纽约不能不尝尝熏牛肉三明治。' },
+          { start: 44, end: 48, en: 'The portions here are incredibly generous.', zh: '这里的份量非常足。' },
+          { start: 48, end: 52, en: 'After lunch, we\'re walking across the Brooklyn Bridge.', zh: '午饭后，我们步行穿过布鲁克林大桥。' },
+          { start: 52, end: 56, en: 'The view of the skyline from here is stunning.', zh: '从这里看天际线的景色令人惊叹。' },
+          { start: 56, end: 60, en: 'It was completed in 1883 and is still an iconic landmark.', zh: '它于1883年完工，至今仍是一个标志性地标。' },
+          { start: 60, end: 64, en: 'Our last stop is the Top of the Rock observation deck.', zh: '我们的最后一站是岩石之巅观景台。' },
+          { start: 64, end: 68, en: 'From here, you can see the entire city spread out below.', zh: '从这里，你可以看到整座城市在脚下展开。' },
+          { start: 68, end: 72, en: 'The Empire State Building looks amazing from this angle.', zh: '从这个角度看帝国大厦非常壮观。' },
+          { start: 72, end: 76, en: 'New York truly is a city like no other.', zh: '纽约确实是一座独一无二的城市。' }
+        ]
+      },
+      {
+        id: 3,
+        title: 'Learning English Through Movies',
+        level: 'B2',
+        levelColor: '#f59e0b',
+        duration: '3:45',
+        gradient: 'linear-gradient(135deg, #06b6d4, #10b981)',
+        icon: 'fa-film',
+        subtitles: [
+          { start: 0, end: 4, en: 'Today I want to talk about learning English through movies.', zh: '今天我想谈谈通过电影学英语。' },
+          { start: 4, end: 8, en: 'This is one of the most effective and enjoyable methods.', zh: '这是最有效、最令人愉悦的方法之一。' },
+          { start: 8, end: 12, en: 'First, choose movies that match your current level.', zh: '首先，选择与你当前水平匹配的电影。' },
+          { start: 12, end: 16, en: 'If you\'re a beginner, start with animated films.', zh: '如果你是初学者，从动画片开始。' },
+          { start: 16, end: 20, en: 'The language is simpler and the pronunciation is clear.', zh: '语言更简单，发音也更清晰。' },
+          { start: 20, end: 24, en: 'Watch with English subtitles, not Chinese ones.', zh: '用英文字幕看，不要用中文字幕。' },
+          { start: 24, end: 28, en: 'This forces your brain to process English directly.', zh: '这迫使你的大脑直接处理英语。' },
+          { start: 28, end: 32, en: 'When you hear a phrase you don\'t understand, pause and rewind.', zh: '当你听到不理解的短语时，暂停并倒回。' },
+          { start: 32, end: 36, en: 'Write it down and look up the meaning later.', zh: '写下来，稍后查找意思。' },
+          { start: 36, end: 40, en: 'Try to repeat the lines out loud after the characters.', zh: '试着跟着角色大声重复台词。' },
+          { start: 40, end: 44, en: 'This technique is called shadowing, and it really works.', zh: '这种技巧叫做影子跟读，非常有效。' },
+          { start: 44, end: 48, en: 'It helps you improve both pronunciation and intonation.', zh: '它帮助你改善发音和语调。' },
+          { start: 48, end: 52, en: 'Another tip is to watch the same movie multiple times.', zh: '另一个技巧是多次观看同一部电影。' },
+          { start: 52, end: 56, en: 'The first time, focus on understanding the plot.', zh: '第一次专注于理解情节。' },
+          { start: 56, end: 60, en: 'The second time, pay attention to the language details.', zh: '第二次注意语言细节。' },
+          { start: 60, end: 64, en: 'By the third time, you\'ll notice expressions you missed before.', zh: '到第三次时，你会注意到之前错过的表达。' },
+          { start: 64, end: 68, en: 'Don\'t worry if you don\'t understand everything at first.', zh: '如果一开始不能全部理解，不要担心。' },
+          { start: 68, end: 72, en: 'Learning a language is a marathon, not a sprint.', zh: '学语言是马拉松，不是短跑。' },
+          { start: 72, end: 76, en: 'Consistency is the key to success.', zh: '坚持是成功的关键。' },
+          { start: 76, end: 80, en: 'Keep watching, keep learning, and you\'ll see progress!', zh: '继续看，继续学，你会看到进步的！' }
+        ]
+      }
+    ];
+
+    // 从 localStorage 读取管理员上传的 Vlog 分类视频并合并
+    function loadUserVlogs() {
+      try {
+        const savedVideos = JSON.parse(localStorage.getItem('linguaview_videos') || '[]');
+        const userVlogs = savedVideos
+          .filter(v => v.category === 'Vlog')
+          .map(v => ({
+            id: v.id,
+            title: v.title,
+            level: 'B1',
+            levelColor: '#8b5cf6',
+            duration: v.duration || 'N/A',
+            gradient: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+            icon: 'fa-video',
+            videoUrl: v.videoUrl,
+            sourceId: v.sourceId || null,
+            subtitles: (v.subtitles || []).map(s => ({
+              start: typeof s.startTime === 'number' ? s.startTime : parseTimeStr(s.startTime),
+              end: typeof s.endTime === 'number' ? s.endTime : parseTimeStr(s.endTime),
+              en: s.english || '',
+              zh: s.chinese || ''
+            })).filter(s => s.en)
+          }));
+        // 合并：用户上传的排在前面
+        vlogVideos.unshift(...userVlogs);
+      } catch (e) {
+        console.warn('加载用户Vlog失败:', e);
+      }
+    }
+
+    // 时间字符串 "00:00:01,000" 转秒数
+    function parseTimeStr(str) {
+      if (typeof str === 'number') return str;
+      if (!str || typeof str !== 'string') return 0;
+      const parts = str.split(/[:,]/).map(Number);
+      if (parts.length >= 3) {
+        return parts[0] * 3600 + parts[1] * 60 + parts[2] + (parts[3] || 0) / 1000;
+      }
+      return 0;
+    }
+
+    /* ========== 上下滑动流 ========== */
+
+    // 状态
+    let currentVideoIndex = 0;
+    // 'english' | 'bilingual'，是否显示中文翻译
+    let subtitleMode = 'bilingual';
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function getVid(i) { return document.getElementById('videoPlayer-' + i); }
+    function getSlide(i) { return document.querySelector('.vlog-slide[data-index="' + i + '"]'); }
+
+    function init() {
+      loadUserVlogs();
+      renderFeed();
+    }
+
+    function renderFeed() {
+      const feed = document.getElementById('videoFeed');
+      feed.innerHTML = vlogVideos.map((v, i) => buildSlide(v, i)).join('');
+      setupSlideSources();
+      setupIntersect();
+      activateSlide(0);
+    }
+
+    function buildSlide(v, i) {
+      const prevDisabled = i === 0 ? 'disabled' : '';
+      const nextDisabled = i === vlogVideos.length - 1 ? 'disabled' : '';
+      return `
+        <section class="vlog-slide" data-index="${i}">
+          <div class="slide-media">
+            <video id="videoPlayer-${i}" playsinline preload="metadata"></video>
+            <div class="slide-placeholder" id="ph-${i}" onclick="togglePlay(${i})">
+              <div class="big-play"><i class="fa-solid fa-play"></i></div>
+              <div class="ph-title">${esc(v.title)}</div>
+              <div class="ph-hint"><i class="fa-solid fa-hand-pointer"></i> 点击播放 · 上滑 / 下滑切换视频</div>
+            </div>
+            <div class="progress-mini"><div class="fill" id="progressFill-${i}"></div></div>
+            <div class="slide-nav">
+              <button class="nav-btn" ${prevDisabled} onclick="goPrev()" title="上一个"><i class="fa-solid fa-chevron-up"></i></button>
+              <button class="nav-btn" ${nextDisabled} onclick="goNext()" title="下一个"><i class="fa-solid fa-chevron-down"></i></button>
+            </div>
+          </div>
+          <div class="slide-bar">
+            <button class="slide-btn" onclick="togglePlay(${i})" title="播放/暂停"><i class="fa-solid fa-play" id="playIcon-${i}"></i></button>
+            <button class="slide-btn" onclick="toggleMute(${i})" title="静音"><i class="fa-solid fa-volume-high" id="muteIcon-${i}"></i></button>
+            <div class="slide-title-wrap">
+              <div class="slide-title">${esc(v.title)}</div>
+              <div class="slide-meta">
+                <span class="level-tag" style="background:${v.levelColor};">${esc(v.level)}</span>
+                <span><i class="fa-solid fa-clock"></i> ${esc(v.duration || '')}</span>
+                <span>${v.subtitles.length}句</span>
+              </div>
+            </div>
+            <button class="subtitle-toggle-btn" id="subsToggle-${i}" onclick="toggleSubtitles(${i})"><i class="fa-solid fa-closed-captioning"></i><span id="subsLabel-${i}">打开字幕</span></button>
+          </div>
+          <div class="slide-subs" id="slideSubs-${i}">
+            <div class="slide-subs-inner">
+              <div class="subs-toolbar">
+                <div class="transcribe-toggle-group">
+                  <button class="transcribe-toggle-btn" id="enBtn-${i}" onclick="setSubtitleMode('english', ${i})">纯英文</button>
+                  <button class="transcribe-toggle-btn active" id="biBtn-${i}" onclick="setSubtitleMode('bilingual', ${i})">字幕翻译</button>
+                </div>
+                <span class="subs-count"><i class="fa-solid fa-hand-pointer"></i> 点击字幕跳转播放</span>
+              </div>
+              <div class="subs-list" id="subsList-${i}"></div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    // 为每个视频设置数据源并绑定事件
+    function setupSlideSources() {
+      vlogVideos.forEach((v, i) => {
+        const vid = getVid(i);
+        if (!vid) return;
+        if (v.videoUrl) {
+          vid.src = v.videoUrl;
+          vid.load();
+        } else if (v.sourceId) {
+          PersistentVideo.getVideoURL(v.sourceId).then(url => {
+            if (url) { vid.src = url; vid.load(); }
+          }).catch(err => console.warn('读取本地视频失败:', err));
+        }
+        vid.addEventListener('timeupdate', () => {
+          updateProgress(i);
+          if (i === currentVideoIndex) syncSubtitles(i);
+        });
+        vid.addEventListener('loadedmetadata', () => updateProgress(i));
+        vid.addEventListener('play', () => { setPlayIcon(i, true); hidePlaceholder(i); });
+        vid.addEventListener('pause', () => setPlayIcon(i, false));
+        vid.addEventListener('ended', () => setPlayIcon(i, false));
+      });
+    }
+
+    // 滚动到哪一屏就激活哪一屏
+    function setupIntersect() {
+      const feed = document.getElementById('videoFeed');
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting && e.intersectionRatio > 0.5) {
+            activateSlide(Number(e.target.dataset.index));
+          }
+        });
+      }, { root: feed, threshold: [0, 0.5, 1] });
+      document.querySelectorAll('.vlog-slide').forEach(s => obs.observe(s));
+    }
+
+    function activateSlide(i) {
+      if (i === currentVideoIndex) return;
+      currentVideoIndex = i;
+      pauseOthers(i);
+    }
+
+    function pauseOthers(activeIdx) {
+      document.querySelectorAll('.vlog-slide').forEach(sl => {
+        const i = Number(sl.dataset.index);
+        if (i === activeIdx) return;
+        const vid = sl.querySelector('video');
+        if (vid && !vid.paused) vid.pause();
+      });
+    }
+
+    // 播放/暂停
+    function togglePlay(i) {
+      const v = vlogVideos[i];
+      const vid = getVid(i);
+      if (!vid) return;
+      if (!v.videoUrl && !v.sourceId) { showToast('演示模式：此视频暂无视频源'); return; }
+      if (vid.paused) {
+        pauseOthers(i);
+        activateSlide(i);
+        vid.play().catch(() => showToast('视频加载失败，请检查视频源'));
+      } else {
+        vid.pause();
+      }
+    }
+
+    function goPrev() { const el = getSlide(currentVideoIndex - 1); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    function goNext() { const el = getSlide(currentVideoIndex + 1); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
+    // 静音
+    function toggleMute(i) {
+      const vid = getVid(i); if (!vid) return;
+      vid.muted = !vid.muted;
+      const ic = document.getElementById('muteIcon-' + i);
+      if (ic) ic.className = vid.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+    }
+
+    function setPlayIcon(i, playing) {
+      const ic = document.getElementById('playIcon-' + i);
+      if (ic) ic.className = playing ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+    }
+    function hidePlaceholder(i) {
+      const ph = document.getElementById('ph-' + i);
+      if (ph) ph.style.display = 'none';
+    }
+
+    // 进度条
+    function updateProgress(i) {
+      const vid = getVid(i); if (!vid) return;
+      const pct = vid.duration ? (vid.currentTime / vid.duration) * 100 : 0;
+      const fill = document.getElementById('progressFill-' + i);
+      if (fill) fill.style.width = pct + '%';
+    }
+
+    /* ========== 字幕 ========== */
+
+    // 打开 / 收起某个视频的字幕
+    function toggleSubtitles(i) {
+      const panel = document.getElementById('slideSubs-' + i);
+      if (!panel) return;
+      const open = panel.classList.toggle('open');
+      const btn = document.getElementById('subsToggle-' + i);
+      if (btn) btn.classList.toggle('active', open);
+      const label = document.getElementById('subsLabel-' + i);
+      if (label) label.textContent = open ? '收起字幕' : '打开字幕';
+      // 首次打开时渲染字幕列表
+      if (open && !panel.dataset.rendered) {
+        renderSlideSubtitles(i);
+        panel.dataset.rendered = '1';
+      }
+    }
+
+    // 渲染某个视频的字幕列表
+    function renderSlideSubtitles(i) {
+      const v = vlogVideos[i];
+      const list = document.getElementById('subsList-' + i);
+      if (!list) return;
+      if (!v.subtitles || v.subtitles.length === 0) {
+        list.innerHTML = '<div class="subs-empty">暂无字幕</div>';
+        return;
+      }
+      list.innerHTML = v.subtitles.map((s, k) => `
+        <div class="subs-item" data-k="${k}" onclick="jumpToSubtitle(${i}, ${k})">
+          <div class="t">${formatTime(s.start)} — ${formatTime(s.end)}</div>
+          <div class="en">${esc(s.en)}</div>
+          <div class="zh">${esc(s.zh)}</div>
+        </div>
+      `).join('');
+    }
+
+    // 字幕翻译切换：纯英文 / 中英对照
+    function setSubtitleMode(mode, i) {
+      subtitleMode = mode;
+      document.querySelectorAll('.slide-subs').forEach(s => {
+        s.classList.toggle('translated', mode === 'bilingual');
+      });
+      document.querySelectorAll('.transcribe-toggle-btn').forEach(b => b.classList.remove('active'));
+      const enBtn = document.getElementById('enBtn-' + i);
+      const biBtn = document.getElementById('biBtn-' + i);
+      if (mode === 'english' && enBtn) enBtn.classList.add('active');
+      if (mode === 'bilingual' && biBtn) biBtn.classList.add('active');
+    }
+
+    // 点击字幕跳转播放
+    function jumpToSubtitle(i, k) {
+      const v = vlogVideos[i];
+      const vid = getVid(i);
+      if (!vid || !v.subtitles[k]) return;
+      vid.currentTime = v.subtitles[k].start;
+      vid.play().catch(() => {});
+    }
+
+    // 随播放进度高亮当前字幕
+    function syncSubtitles(i) {
+      const v = vlogVideos[i];
+      const vid = getVid(i);
+      if (!vid || !v.subtitles) return;
+      const t = vid.currentTime;
+      const idx = v.subtitles.findIndex(s => t >= s.start && t <= s.end);
+      if (idx === -1) return;
+      const list = document.getElementById('subsList-' + i);
+      if (!list || !list.children.length) return;
+      Array.from(list.children).forEach((el, k) => el.classList.toggle('active', k === idx));
+      const active = list.querySelector('.subs-item.active');
+      if (active && idx !== list._lastActive) {
+        active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        list._lastActive = idx;
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // 时间格式化
+    function formatTime(seconds) {
+      if (isNaN(seconds) || !isFinite(seconds)) return '00:00';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    init();
+  </script>
+</body>
+</html>

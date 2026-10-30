@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinguaView 英语学习网站 - 使用指南</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .header { text-align: center; color: white; margin-bottom: 40px; }
+    .header h1 { font-size: 36px; font-weight: 700; margin-bottom: 10px; }
+    .header p { font-size: 16px; opacity: 0.9; }
+    .card { background: white; border-radius: 20px; padding: 30px; margin-bottom: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+    .card h2 { font-size: 20px; color: #1e293b; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .card h2 i { color: #3b82f6; }
+    .card p { color: #64748b; line-height: 1.7; margin-bottom: 12px; }
+    .steps { list-style: none; counter-reset: step; }
+    .steps li { counter-increment: step; padding: 12px 16px; background: #f1f5f9; border-radius: 10px; margin-bottom: 10px; position: relative; padding-left: 50px; color: #475569; font-size: 14px; line-height: 1.6; }
+    .steps li::before { content: counter(step); position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+    .page-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-top: 20px; }
+    .page-link { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 20px; border-radius: 14px; text-decoration: none; text-align: center; transition: all 0.3s; cursor: pointer; }
+    .page-link:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(59,130,246,0.4); }
+    .page-link i { font-size: 28px; margin-bottom: 8px; display: block; }
+    .page-link span { font-weight: 600; font-size: 14px; }
+    .page-link small { display: block; opacity: 0.85; font-size: 12px; margin-top: 4px; }
+    .notice { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 10px; margin-bottom: 16px; }
+    .notice h3 { color: #1e40af; font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .notice p { color: #1e3a8a; font-size: 13px; line-height: 1.6; margin-bottom: 0; }
+    .warn { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 10px; margin-bottom: 16px; }
+    .warn h3 { color: #92400e; font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .warn p { color: #78350f; font-size: 13px; line-height: 1.6; margin-bottom: 0; }
+    .level-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+    .level-table th { background: #f1f5f9; color: #334155; text-align: left; padding: 10px 12px; font-weight: 600; border-bottom: 2px solid #e2e8f0; }
+    .level-table td { padding: 10px 12px; color: #475569; border-bottom: 1px solid #eef2f6; line-height: 1.6; vertical-align: top; }
+    .level-table tr:last-child td { border-bottom: none; }
+    .level-code { display: inline-block; padding: 2px 8px; border-radius: 6px; color: #fff; font-size: 12px; font-weight: 700; }
+    .goal-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .goal-tag { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 14px; font-size: 13px; color: #334155; }
+    .goal-tag b { color: #2563eb; }
+    .footer-links { text-align: center; margin-top: 8px; }
+    .footer-links a { color: rgba(255,255,255,0.9); text-decoration: none; font-size: 13px; }
+    .footer-links a:hover { text-decoration: underline; }
+    .footer-note { text-align: center; color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 20px; }
+    @media (max-width: 600px) {
+      .page-links { grid-template-columns: 1fr; }
+      .header h1 { font-size: 28px; }
+      .card { padding: 22px; }
+      .level-table { font-size: 12px; }
+      .level-table th, .level-table td { padding: 8px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1><svg style="vertical-align:middle; margin-right:6px;" viewBox="0 0 36 36" width="30" height="30" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lv-grad" x1="0" y1="0" x2="36" y2="36"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs><path d="M3 7a3 3 0 0 1 3-3h24a3 3 0 0 1 3 3v16a3 3 0 0 1-3 3H17l-7 5v-5H6a3 3 0 0 1-3-3V7z" fill="url(#lv-grad)"/><rect x="11" y="12" width="3" height="11" rx="1.2" fill="white"/><rect x="11" y="19.5" width="9" height="3" rx="1.2" fill="white"/><circle cx="24" cy="13" r="2.2" fill="white"/></svg>LinguaView</h1>
+      <p>英语学习使用指南（学习者版）</p>
+    </div>
+
+    <div class="card">
+      <h2><i class="fa-solid fa-rocket"></i> 快速开始</h2>
+      <div class="notice">
+        <h3><i class="fa-solid fa-circle-info"></i> 只有一个主流程</h3>
+        <p>选目标或等级 → 进入推荐课程 → 听 / 看字幕 / 做练习 → 查看本节正确率。首页和这里都按这条流程走。</p>
+      </div>
+      <div class="page-links">
+        <a href="index.html" class="page-link">
+          <i class="fa-solid fa-house"></i>
+          <span>首页</span>
+          <small>了解学习流程</small>
+        </a>
+        <a href="catalog.html" class="page-link">
+          <i class="fa-solid fa-bullseye"></i>
+          <span>学习目录</span>
+          <small>按目标或等级选课</small>
+        </a>
+        <a href="learn.html" class="page-link">
+          <i class="fa-solid fa-headphones"></i>
+          <span>精听练习</span>
+          <small>逐句字幕 + 练习</small>
+        </a>
+        <a href="vlog.html" class="page-link">
+          <i class="fa-solid fa-video"></i>
+          <span>Vlog 短视频</span>
+          <small>碎片时间泛听</small>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><i class="fa-solid fa-shoe-prints"></i> 一次完整学习怎么做</h2>
+      <ol class="steps">
+        <li>打开「学习目录」，先按<strong>学习目标</strong>（零基础 / 四六级 / 考研 / 雅思托福 / 职场）选起点，或直接按 CEFR 等级筛选。</li>
+        <li>在「示例课程」或该等级课程列表里，挑一节带双语字幕的课，点「开始学习」进入精听页。</li>
+        <li>播放时字幕会随进度高亮；点击任意一句可跳转到对应时间点，右侧显示该句的重点词与释义。</li>
+        <li>切换练习模式巩固：<strong>听写</strong>整句、<strong>挖空</strong>填关键词、<strong>中译英</strong>练表达。</li>
+        <li>页面底部实时显示<strong>正确 / 错误 / 总句数</strong>，据此回看还不熟的句子。</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2><i class="fa-solid fa-layer-group"></i> 等级体系怎么用</h2>
+      <p>本站按 <strong>CEFR（欧洲语言共同参考框架）</strong>划分等级，这是国际通用的语言能力标准。每个等级都写清了「适合什么基础」和「学完能做什么」，不夸大效果。</p>
+      <table class="level-table">
+        <thead>
+          <tr><th>等级</th><th>适合的基础</th><th>学完后大致能做到</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="level-code" style="background:#10b981;">A1</span></td>
+            <td>零基础或刚接触英语</td>
+            <td>用简单句打招呼、自我介绍；听懂并说出最常用的日常表达。</td>
+          </tr>
+          <tr>
+            <td><span class="level-code" style="background:#3b82f6;">A2</span></td>
+            <td>掌握少量单词和基础句型</td>
+            <td>应对购物、点餐、问路等熟悉场景；能看懂简单短文与标识。</td>
+          </tr>
+          <tr>
+            <td><span class="level-code" style="background:#f59e0b;">B1</span></td>
+            <td>能进行简单交流</td>
+            <td>描述经历与计划，处理旅行中的常见情况；看懂日常新闻大意。</td>
+          </tr>
+          <tr>
+            <td><span class="level-code" style="background:#8b5cf6;">B2</span></td>
+            <td>交流较流畅，词汇量约 4000+</td>
+            <td>就多数话题进行连贯表达与讨论；看懂较长的文章与影视对白。</td>
+          </tr>
+          <tr>
+            <td><span class="level-code" style="background:#ef4444;">C1–C2</span></td>
+            <td>接近或达到熟练使用水平</td>
+            <td>在学术、职场等复杂场景中准确理解与表达；能处理抽象与专业内容。</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3 style="font-size: 15px; color: #334155; margin: 18px 0 0;">按国内常见目标的「推荐起点」</h3>
+      <div class="goal-tags">
+        <span class="goal-tag">零基础 · 推荐 <b>A1</b></span>
+        <span class="goal-tag">初高中 · 推荐 <b>A2</b></span>
+        <span class="goal-tag">四六级 · 推荐 <b>B1</b></span>
+        <span class="goal-tag">考研 · 推荐 <b>B2</b></span>
+        <span class="goal-tag">雅思 / 托福 · 推荐 <b>B2</b></span>
+        <span class="goal-tag">职场商务 · 推荐 <b>B1</b></span>
+      </div>
+      <div class="notice" style="margin-top: 14px;">
+        <p><i class="fa-solid fa-circle-info"></i> 以上只是<strong>推荐起点</strong>，<strong>不是官方考试等级换算</strong>。CEFR 等级表示本站内容的难度参考，不代表你的考试成绩或真实水平；请按自己的实际听读体验调整。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><i class="fa-solid fa-circle-question"></i> 常见问题</h2>
+      <div class="warn">
+        <h3><i class="fa-solid fa-lightbulb"></i> 点击播放没有反应？</h3>
+        <p>当前为演示版本，部分示例课程只有字幕、尚未接入视频源。此时可直接用字幕进行听写、挖空和中译英练习，学习流程不受影响。</p>
+      </div>
+      <div class="warn">
+        <h3><i class="fa-solid fa-lightbulb"></i> 学习记录会保存吗？</h3>
+        <p>本节的正确 / 错误计数只在当前页面有效，刷新后会重置；跨设备的学习进度尚未接入云端，正在准备中。</p>
+      </div>
+      <div class="warn">
+        <h3><i class="fa-solid fa-lightbulb"></i> 手机上能用吗？</h3>
+        <p>可以用。精准操作（播放、切模式、看解析）均已适配手机；字幕字号在手机端会自动放大。横屏观看体验更佳。</p>
+      </div>
+    </div>
+
+    <style>
+      .page-footer { text-align: center; margin-top: 12px; }
+    </style>
+    <div class="page-footer">
+      <p class="footer-links">
+        <a href="index.html">返回首页</a> ·
+        <a href="声明.html">来源与版权</a> ·
+        <a href="声明.html#privacy">隐私说明</a> ·
+        <a href="管理员说明.html" style="opacity:0.75;">管理员说明</a>
+      </p>
+      <p class="footer-note">LinguaView · 英语视频精听学习工具</p>
+    </div>
+  </div>
+</body>
+</html>

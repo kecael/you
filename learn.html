@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinguaView - 沉浸式精听学习</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="js/theme.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Noto Sans SC', sans-serif; background: var(--bg-primary); color: var(--text-primary); position: relative; }
+
+    body::before {
+      content: '';
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+      border-radius: 50%;
+      z-index: -1;
+      filter: blur(100px);
+      opacity: var(--blob-opacity);
+      top: -100px;
+      right: -100px;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 24px;
+      background: var(--navbar-bg-scrolled);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 2px 10px var(--navbar-shadow);
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-decoration: none;
+    }
+
+    .navbar-links { display: flex; gap: 24px; list-style: none; }
+
+    .navbar-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .navbar-links a:hover { color: var(--primary-color); }
+
+    .navbar-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--primary-color);
+      transition: width 0.3s ease;
+    }
+
+    .navbar-links a:hover::after { width: 100%; }
+
+    .learn-container { display: flex; height: calc(100vh - 60px); overflow: hidden; }
+
+    .left-panel { width: 35%; background: #000; display: flex; flex-direction: column; position: relative; }
+    .video-wrapper { flex: 1; position: relative; overflow: hidden; }
+    .video-player { width: 100%; height: 100%; object-fit: contain; }
+    .video-placeholder {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.3s;
+      z-index: 2;
+    }
+    .video-placeholder:hover { background: linear-gradient(135deg, #1a1a2e 0%, #1a2a4e 50%, #145380 100%); }
+    .video-placeholder.hidden { display: none; }
+    .placeholder-play-btn {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; color: white; transition: all 0.3s;
+      box-shadow: 0 4px 20px rgba(168,85,247,0.4);
+    }
+    .video-placeholder:hover .placeholder-play-btn { transform: scale(1.1); box-shadow: 0 6px 30px rgba(168,85,247,0.6); }
+    .placeholder-title { font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.9); }
+    .placeholder-hint { font-size: 13px; color: rgba(255,255,255,0.4); }
+    .video-controls { padding: 12px 16px; background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.7)); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .control-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 10px; border-radius: 50%; cursor: pointer; transition: all 0.3s ease; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .control-btn:hover { background: rgba(255,255,255,0.25); transform: scale(1.1); }
+    .control-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.3); transition: transform 0.1s ease; }
+    .progress-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; cursor: pointer; position: relative; transition: height 0.2s; min-width: 80px; }
+    .progress-bar:hover { height: 6px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end)); border-radius: 2px; width: 0%; transition: width 0.1s; position: relative; }
+    .progress-fill::after { content: ''; position: absolute; right: -5px; top: 50%; transform: translateY(-50%); width: 10px; height: 10px; border-radius: 50%; background: var(--primary-color); opacity: 0; transition: opacity 0.2s; }
+    .progress-bar:hover .progress-fill::after { opacity: 1; }
+    .time-display { color: rgba(255,255,255,0.8); font-size: 12px; font-weight: 500; white-space: nowrap; }
+    .volume-slider { width: 70px; height: 4px; -webkit-appearance: none; background: rgba(255,255,255,0.2); border-radius: 2px; outline: none; cursor: pointer; }
+    .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--primary-color); cursor: pointer; }
+    .volume-slider::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--primary-color); cursor: pointer; border: none; }
+    .speed-select { background: rgba(255,255,255,0.1); color: #fff; border: none; border-radius: 6px; padding: 6px 8px; font-size: 12px; cursor: pointer; outline: none; }
+    .speed-select option { background: #1a1a2e; color: #fff; }
+    .controls-row { display: flex; align-items: center; gap: 10px; width: 100%; }
+    .controls-row-secondary { display: flex; align-items: center; gap: 10px; width: 100%; padding-top: 4px; }
+
+    .middle-panel { flex: 1; display: flex; flex-direction: column; border-left: 1px solid var(--border-color); }
+    .mode-bar { display: flex; gap: 8px; padding: 12px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); overflow-x: auto; }
+    .mode-btn { padding: 10px 18px; border: none; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; background: var(--bg-input); color: var(--text-secondary); }
+    .mode-btn.active { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
+    .mode-btn:hover { background: rgba(59, 130, 246, 0.1); color: var(--primary-color); }
+    .mode-btn.active:hover { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; transform: translateY(-1px); }
+    .mode-btn:active { transform: scale(0.95); transition: transform 0.1s ease; }
+
+    .script-container { flex: 1; overflow-y: auto; padding: 16px; }
+    .script-item { padding: 16px; margin-bottom: 8px; border-radius: var(--radius); cursor: pointer; transition: all 0.3s ease; display: flex; gap: 14px; align-items: flex-start; background: var(--bg-card); border: 1px solid var(--border-color); }
+    .script-item:hover { background: var(--accent-bg); border-color: rgba(59, 130, 246, 0.2); transform: translateX(4px); }
+    .script-item.active { background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(59, 130, 246, 0.08)); border-left: 4px solid var(--gradient-start); border-color: rgba(168, 85, 247, 0.2); box-shadow: 0 2px 10px rgba(168, 85, 247, 0.1); }
+    .script-item.correct { background: rgba(34, 197, 94, 0.08); border-color: rgba(34, 197, 94, 0.2); }
+    .script-item.wrong { background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.2); }
+
+    .script-actions { display: flex; flex-direction: column; gap: 4px; }
+    .action-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; }
+    .action-btn:hover { color: var(--primary-color); }
+    .action-btn.looping { color: var(--success-color); }
+
+    .script-content { flex: 1; }
+    .script-time { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+    .script-english { font-size: 16px; font-weight: 500; line-height: 1.5; margin-bottom: 6px; }
+    .script-chinese { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+
+    .blank-input { display: inline-block; min-width: 80px; padding: 2px 8px; border-bottom: 2px solid var(--border-color); background: transparent; font-size: inherit; font-weight: inherit; text-align: center; outline: none; margin: 0 4px; }
+    .blank-input:focus { border-color: var(--primary-color); }
+    .blank-input.correct { border-color: var(--success-color); color: var(--success-color); }
+    .blank-input.wrong { border-color: var(--error-color); color: var(--error-color); }
+    .blank-input.completed { border-color: var(--success-color); background: rgba(34, 197, 94, 0.1); }
+
+    .right-panel { width: 320px; background: var(--bg-card); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; }
+    .right-header { padding: 0; border-bottom: 1px solid var(--border-color); }
+    .panel-tabs { display: flex; width: 100%; }
+    .panel-tab { flex: 1; padding: 14px 10px; background: none; border: none; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.3s; border-bottom: 2px solid transparent; }
+    .panel-tab:hover { color: var(--accent-blue); background: rgba(59,130,246,0.05); }
+    .panel-tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); background: rgba(59,130,246,0.03); }
+    .wordbook-count { font-size: 10px; background: var(--accent-blue); color: white; padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center; font-weight: 700; }
+    .vocab-container { flex: 1; overflow-y: auto; padding: 14px; }
+    .vocab-container.hidden { display: none; }
+    .vocab-card { padding: 14px; background: linear-gradient(135deg, var(--bg-input), rgba(168, 85, 247, 0.05)); border-radius: var(--radius); margin-bottom: 12px; border: 1px solid var(--border-color); transition: all 0.3s ease; position: relative; }
+    .vocab-card:hover { border-color: rgba(168, 85, 247, 0.4); box-shadow: 0 4px 12px rgba(168, 85, 247, 0.12); transform: translateY(-2px); }
+    .vocab-card.favorited { border-color: rgba(245, 158, 11, 0.4); background: linear-gradient(135deg, var(--bg-input), rgba(245, 158, 11, 0.08)); }
+    .vocab-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
+    .vocab-word-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .vocab-word { font-size: 17px; font-weight: 700; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; cursor: pointer; transition: opacity 0.2s; }
+    .vocab-word:hover { opacity: 0.75; }
+    .vocab-phonetic { font-size: 12px; color: var(--text-muted); font-style: italic; }
+    .vocab-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .vocab-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all 0.2s; }
+    .vocab-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); transform: scale(1.08); }
+    .vocab-btn.fav:hover { border-color: #f59e0b; color: #f59e0b; }
+    .vocab-btn.fav.active { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.12); }
+    .vocab-btn.play:hover { border-color: #10b981; color: #10b981; }
+    .vocab-meaning { font-size: 14px; color: var(--text-secondary); margin: 6px 0; font-weight: 500; line-height: 1.5; }
+    .vocab-example-row { display: flex; align-items: flex-start; gap: 8px; background: var(--accent-bg); padding: 8px 10px; border-radius: var(--radius-sm); margin-top: 8px; }
+    .vocab-example-text { font-size: 12.5px; color: var(--text-secondary); line-height: 1.55; flex: 1; font-style: italic; }
+    .vocab-example-text .example-zh { display: block; font-style: normal; color: var(--text-muted); font-size: 11.5px; margin-top: 3px; }
+    .vocab-example-row .vocab-btn { width: 26px; height: 26px; flex-shrink: 0; font-size: 10px; }
+    .no-vocab { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+    .wordbook-toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .wordbook-toolbar .wb-btn { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
+    .wordbook-toolbar .wb-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+    .wordbook-toolbar .wb-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
+
+    /* Word detail modal */
+    .word-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s; }
+    .word-modal-content { background: var(--bg-card); border-radius: 20px; max-width: 480px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+    .word-modal-header { padding: 24px 24px 16px; position: relative; background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(168,85,247,0.08)); border-radius: 20px 20px 0 0; }
+    .word-modal-close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer; font-size: 16px; transition: all 0.2s; }
+    .word-modal-close:hover { background: var(--border-color); color: var(--text-primary); transform: rotate(90deg); }
+    .word-modal-body { padding: 0 24px 24px; }
+    .wm-word { font-size: 32px; font-weight: 800; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 2px; }
+    .wm-phonetic { font-size: 14px; color: var(--text-muted); font-style: italic; display: inline-flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .wm-phonetic .wm-play { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all 0.2s; }
+    .wm-phonetic .wm-play:hover { transform: scale(1.1); }
+    .wm-phonetic .wm-play.playing { animation: pulse-glow 0.8s infinite; }
+    @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.5); } 50% { box-shadow: 0 0 0 8px rgba(59,130,246,0); } }
+    .wm-meaning-section { margin-bottom: 14px; }
+    .wm-meaning-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
+    .wm-meaning-list { display: flex; flex-direction: column; gap: 6px; }
+    .wm-meaning-item { font-size: 14px; color: var(--text-secondary); padding: 8px 12px; background: var(--bg-secondary); border-radius: 8px; border-left: 3px solid var(--accent-blue); }
+    .wm-example-section { margin-bottom: 14px; }
+    .wm-example-card { background: var(--bg-secondary); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; border: 1px solid var(--border-color); }
+    .wm-example-en { font-size: 14px; color: var(--text-primary); line-height: 1.55; display: flex; align-items: flex-start; gap: 8px; }
+    .wm-example-en i { font-size: 11px; color: var(--accent-blue); margin-top: 4px; flex-shrink: 0; }
+    .wm-example-zh { font-size: 12.5px; color: var(--text-muted); margin-top: 4px; padding-left: 18px; }
+    .wm-footer { display: flex; gap: 10px; padding-top: 16px; border-top: 1px solid var(--border-color); }
+    .wm-footer button { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-card); font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .wm-footer button:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+    .wm-footer button.fav-btn.active { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.1); }
+    .wm-footer button.fav-btn.active:hover { border-color: #ef4444; color: #ef4444; }
+
+    @keyframes popIn { 0% { opacity: 0; transform: scale(0.9) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .stats-bar { padding: 16px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; background: var(--bg-input); }
+    .stat-item { text-align: center; flex: 1; }
+    .stat-value { font-size: 22px; font-weight: 700; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+    /* ===== 本课学习目标（单元化信息） ===== */
+    .lesson-goal-bar {
+      padding: 12px 16px;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.10), rgba(59, 130, 246, 0.10));
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .lesson-goal-main { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+
+    .lesson-goal-label { font-size: 13px; font-weight: 700; color: var(--primary-color); white-space: nowrap; }
+
+    #lessonGoalText { font-size: 13px; color: var(--text-secondary); }
+
+    .lesson-goal-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); }
+
+    .lesson-goal-meta span { display: inline-flex; align-items: center; gap: 4px; }
+
+    @media (max-width: 1200px) {
+      .right-panel { width: 260px; }
+      .left-panel { width: 38%; }
+    }
+
+    @media (max-width: 900px) {
+      .learn-container { flex-direction: column; height: auto; }
+      .left-panel { width: 100%; height: auto; }
+      .video-wrapper { aspect-ratio: 16/9; }
+      .middle-panel { border-left: none; border-top: 1px solid var(--border-color); }
+      .right-panel { width: 100%; border-left: none; border-top: 1px solid var(--border-color); }
+      .mode-bar { flex-wrap: wrap; }
+    }
+
+    @media (max-width: 768px) {
+      .navbar-links { display: none; }
+      .left-panel { height: auto; }
+      .video-controls { flex-wrap: wrap; }
+      .controls-row, .controls-row-secondary { justify-content: center; }
+      /* 手机端：字幕字号加大、行距放宽，练习输入更易点按 */
+      .script-english { font-size: 18px; line-height: 1.6; }
+      .script-chinese { font-size: 15.5px; line-height: 1.65; }
+      .script-item { padding: 14px; gap: 10px; }
+      .script-time { font-size: 12px; }
+      .action-btn { padding: 8px; font-size: 16px; }
+      .blank-input { min-width: 72px; padding: 4px 8px; font-size: 17px; }
+      .mode-btn { padding: 11px 16px; font-size: 14px; }
+      .vocab-word { font-size: 18px; }
+      .vocab-meaning { font-size: 15px; }
+      .lesson-goal-bar { padding: 10px 12px; }
+      #lessonGoalText { font-size: 12.5px; }
+      .lesson-goal-meta { gap: 12px; font-size: 11.5px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand"><svg class="brand-logo" style="flex-shrink:0; filter:drop-shadow(0 2px 6px rgba(59,130,246,0.3));" viewBox="0 0 36 36" width="28" height="28" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lv-grad" x1="0" y1="0" x2="36" y2="36"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs><path d="M3 7a3 3 0 0 1 3-3h24a3 3 0 0 1 3 3v16a3 3 0 0 1-3 3H17l-7 5v-5H6a3 3 0 0 1-3-3V7z" fill="url(#lv-grad)"/><rect x="11" y="12" width="3" height="11" rx="1.2" fill="white"/><rect x="11" y="19.5" width="9" height="3" rx="1.2" fill="white"/><circle cx="24" cy="13" r="2.2" fill="white"/></svg>LinguaView</a>
+    <ul class="navbar-links">
+      <li><a href="index.html">首页</a></li>
+      <li><a href="catalog.html">学习目录</a></li>
+      <li><a href="learn.html" style="color: var(--primary-color);">精听练习</a></li>
+      <li><a href="使用指南.html">使用指南</a></li>
+    </ul>
+    <button class="theme-toggle" onclick="toggleTheme()" title="切换深色模式">
+      <i class="fa-solid fa-moon"></i>
+      <i class="fa-solid fa-sun"></i>
+    </button>
+    <button class="hamburger" onclick="toggleMobileMenu()" title="菜单">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html">首页</a>
+    <a href="catalog.html">学习目录</a>
+    <a href="learn.html" class="active">精听练习</a>
+    <a href="使用指南.html">使用指南</a>
+  </div>
+
+  <div class="learn-container">
+    <div class="left-panel">
+      <div class="video-wrapper">
+        <video class="video-player" id="videoPlayer" playsinline>
+          <source src="" type="video/mp4">
+        </video>
+        <div class="video-placeholder" id="videoPlaceholder" onclick="togglePlay()">
+          <div class="placeholder-play-btn"><i class="fa-solid fa-play"></i></div>
+          <div class="placeholder-title" id="placeholderTitle">英语是未来的选择</div>
+          <div class="placeholder-hint">示例课程 · 可先用下方字幕做听写与挖空练习</div>
+        </div>
+      </div>
+      <div class="video-controls">
+        <div class="controls-row">
+          <button class="control-btn" onclick="togglePlay()" title="播放/暂停"><i class="fa-solid fa-play" id="playIcon"></i></button>
+          <div class="progress-bar" onclick="seekVideo(event)">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <span class="time-display" id="timeDisplay">00:00 / 00:00</span>
+        </div>
+        <div class="controls-row-secondary">
+          <button class="control-btn" onclick="toggleMute()" title="静音" id="muteBtn"><i class="fa-solid fa-volume-high" id="muteIcon"></i></button>
+          <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.05" value="1" oninput="setVolume(this.value)">
+          <select class="speed-select" id="speedSelect" onchange="setSpeed(this.value)">
+            <option value="0.5">0.5x</option>
+            <option value="0.75">0.75x</option>
+            <option value="1" selected>1.0x</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x</option>
+          </select>
+          <button class="control-btn" onclick="toggleLoopMode()" title="单句循环"><i class="fa-solid fa-repeat" id="loopIcon"></i></button>
+          <button class="control-btn" onclick="toggleFullscreen()" title="全屏"><i class="fa-solid fa-expand"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="middle-panel">
+      <div class="lesson-goal-bar" id="lessonGoalBar">
+        <div class="lesson-goal-main">
+          <span class="lesson-goal-label"><i class="fa-solid fa-bullseye"></i> 本课目标</span>
+          <span id="lessonGoalText">逐句听懂全文，掌握重点词句，并能用中文复述大意</span>
+        </div>
+        <div class="lesson-goal-meta">
+          <span><i class="fa-solid fa-signal"></i> <span id="lessonLevelText">难度 —</span></span>
+          <span><i class="fa-solid fa-closed-captioning"></i> <span id="lessonSentenceCount">— 句字幕</span></span>
+          <span><i class="fa-solid fa-file-video"></i> <span id="lessonSourceStatus">—</span></span>
+          <span><i class="fa-solid fa-list-check"></i> 练习：听写 / 挖空 / 中译英</span>
+        </div>
+      </div>
+      <div class="mode-bar">
+        <button class="mode-btn active" data-mode="bilingual" onclick="setMode('bilingual')">双语</button>
+        <button class="mode-btn" data-mode="english" onclick="setMode('english')">英文</button>
+        <button class="mode-btn" data-mode="chinese" onclick="setMode('chinese')">中文</button>
+        <button class="mode-btn" data-mode="dictation" onclick="setMode('dictation')">听写</button>
+        <button class="mode-btn" data-mode="blank" onclick="setMode('blank')">挖空</button>
+        <button class="mode-btn" data-mode="reading" onclick="setMode('reading')">阅读</button>
+        <button class="mode-btn" data-mode="cnToEn" onclick="setMode('cnToEn')">中译英</button>
+      </div>
+
+      <div class="script-container" id="scriptContainer">
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="right-header">
+        <div class="panel-tabs">
+          <button class="panel-tab active" data-tab="vocab" onclick="switchPanelTab('vocab')"><i class="fa-solid fa-book-open"></i> 词汇解析</button>
+          <button class="panel-tab" data-tab="wordbook" onclick="switchPanelTab('wordbook')"><i class="fa-solid fa-star"></i> 生词本 <span class="wordbook-count" id="wordbookCount">0</span></button>
+        </div>
+      </div>
+      <div class="vocab-container" id="vocabContainer">
+        <div class="no-vocab">
+          <i class="fa-solid fa-search" style="font-size: 32px; margin-bottom: 8px;"></i>
+          <p>点击句子查看生词解析</p>
+        </div>
+      </div>
+      <div class="vocab-container hidden" id="wordbookContainer">
+        <div class="no-vocab">
+          <i class="fa-regular fa-star" style="font-size: 32px; margin-bottom: 8px;"></i>
+          <p>还没有收藏的单词</p>
+          <p style="font-size: 12px; margin-top: 6px;">点击词汇卡片上的 ⭐ 收藏生词</p>
+        </div>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-value" id="correctCount">0</div>
+          <div class="stat-label">正确</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="wrongCount">0</div>
+          <div class="stat-label">错误</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="totalCount">0</div>
+          <div class="stat-label">总数</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/vocab_a1.js"></script>
+  <script src="js/vocab_a2.js"></script>
+  <script src="js/vocab_b1.js"></script>
+  <script src="js/vocab_b2.js"></script>
+  <script src="js/vocab_c1.js"></script>
+  <script src="js/levels.js"></script>
+  <style>
+    .level-info-bar {
+      padding: 10px 16px;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(59, 130, 246, 0.08));
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .level-info-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .level-badge-small {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .level-info-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .level-info-text strong {
+      color: var(--text-primary);
+    }
+
+    .level-stats {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .level-stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .level-stat-value {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .level-quick-select {
+      padding: 10px 16px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+    }
+
+    .level-quick-btn {
+      padding: 8px 14px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-primary);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .level-quick-btn:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .level-quick-btn.active {
+      background: var(--gradient, linear-gradient(135deg, #3b82f6, #2563eb));
+      color: white;
+      border-color: transparent;
+    }
+  </style>
+  <script>
+    let currentLevelId = null;
+    let currentLevelData = null;
+
+    // 从音标中提取元音音标
+    function extractVowels(phonetic) {
+      if (!phonetic) return '';
+      const vowelPattern = /iː|ɪ|e|æ|ʌ|ɜː|ə|uː|ʊ|ɔː|ɒ|ɑː|eɪ|aɪ|ɔɪ|aʊ|əʊ|ɪə|eə|ʊə/g;
+      const matches = phonetic.match(vowelPattern);
+      if (!matches || matches.length === 0) return '-';
+      return [...new Set(matches)].join(', ');
+    }
+
+    function getLevelInfoHtml() {
+      if (!currentLevelData) return '';
+      const level = currentLevelData;
+      const stars = '★'.repeat(level.difficulty) + '☆'.repeat(5 - level.difficulty);
+      const wordCount = level.vocabulary.wordList ? level.vocabulary.wordList.length : 0;
+      
+      const videoButtons = level.sampleVideos.map(v => `
+        <button class="level-quick-btn ${videoData.id === v.id ? 'active' : ''}" onclick="switchLevelVideo('${v.id}')">
+          <i class="fa-solid ${level.icon}"></i>
+          ${v.title.length > 12 ? v.title.substring(0, 12) + '...' : v.title}
+          <span style="opacity: 0.7; margin-left: 4px; font-size: 10px;">${v.duration}</span>
+        </button>
+      `).join('');
+      return `
+        <div class="level-info-bar">
+          <div class="level-info-left">
+            <span class="level-badge-small" style="background: ${level.gradient};">
+              <i class="fa-solid ${level.icon}"></i>
+              ${level.name} (${level.level})
+            </span>
+            <span class="level-info-text">
+              <strong>${level.vocabulary.count}</strong> 核心词汇 · 
+              难度 <strong>${level.difficulty}/5</strong>
+              <span style="letter-spacing: 1px; margin: 0 4px;">${stars}</span>
+              <a href="catalog.html?level=${level.id}" style="color: var(--accent-blue); text-decoration: none; margin-left: 4px;">查看更多 →</a>
+            </span>
+          </div>
+          <div class="level-stats">
+            <div class="level-stat">
+              <i class="fa-solid fa-book" style="color: ${level.color};"></i>
+              <span class="level-stat-value">${level.vocabulary.topics.length}</span> 主题
+            </div>
+            <div class="level-stat">
+              <i class="fa-solid fa-video" style="color: ${level.color};"></i>
+              <span class="level-stat-value">${level.sampleVideos.length}</span> 视频
+            </div>
+            <div class="level-stat">
+              <i class="fa-solid fa-list-check" style="color: ${level.color};"></i>
+              <span class="level-stat-value">${wordCount}</span> 精选词
+            </div>
+          </div>
+        </div>
+        <div class="level-quick-select">
+          ${videoButtons}
+        </div>
+        <div id="levelWordList" style="padding: 10px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); max-height: 100px; overflow-y: auto;">
+          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">
+            <i class="fa-solid fa-book" style="color: ${level.color};"></i> 本等级核心词汇预览 
+            <span style="font-weight: normal; color: var(--text-muted);">(${wordCount} 个精选词 · 目标 ${level.vocabulary.count} 词)</span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+            ${level.vocabulary.wordList.slice(0, 20).map(w => {
+              const vowel = w.vowel || (typeof extractVowels === 'function' ? extractVowels(w.phonetic) : '');
+              return `<span style="font-size: 11px; padding: 3px 8px; background: ${level.color}10; border: 1px solid ${level.color}25; color: ${level.color}; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" onclick="openWordDetail(${JSON.stringify({word:w.word, phonetic:w.phonetic, meaning:w.meaning, examples:[]}).replace(/"/g,'&quot;')})" title="点击查看详情">
+                <strong>${w.word}</strong>
+                <span style="opacity: 0.5; font-weight: normal;">${w.phonetic || ''}</span>
+                <span style="color: #e74c3c; font-weight: 600; font-size: 10px;">${vowel}</span>
+              </span>`;
+            }).join('')}
+            ${wordCount > 20 ? `<span style="font-size: 11px; padding: 2px 8px; color: var(--text-muted);">+${wordCount - 20} 更多词</span>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function switchLevelVideo(videoId) {
+      if (!currentLevelData) return;
+      const video = currentLevelData.sampleVideos.find(v => v.id === videoId);
+      if (!video) return;
+      videoData.id = video.id;
+      videoData.title = video.title;
+      videoData.subtitles = video.subtitles || [];
+      videoData.videoUrl = '';
+      currentSubtitleId = null;
+      correctCount = 0;
+      wrongCount = 0;
+      isLooping = false;
+      loopStart = 0;
+      loopEnd = 0;
+      
+      video.pause();
+      video.currentTime = 0;
+      document.getElementById('videoPlaceholder').classList.remove('hidden');
+      document.getElementById('placeholderTitle').textContent = video.title || videoData.title;
+      renderScript();
+      updateStats();
+      updateLevelInfo();
+      updateLessonGoalBar();
+      vocabContainer.innerHTML = `<div class="no-vocab"><i class="fa-solid fa-search" style="font-size: 32px; margin-bottom: 8px;"></i><p>点击句子查看生词解析</p></div>`;
+      showToast(`已切换到「${video.title}」`, 'info');
+    }
+
+    function loadLevelFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const levelId = urlParams.get('levelId');
+      if (levelId) {
+        currentLevelId = levelId;
+        currentLevelData = window.getLevelById(levelId);
+      }
+    }
+
+    const videoData = {
+      id: 1,
+      title: '英语是未来的选择',
+      videoUrl: '',
+      subtitles: [
+        {
+          id: 1,
+          startTime: 1,
+          endTime: 3,
+          english: 'This is the future choice.',
+          chinese: '英语是未来的选择。',
+          keyWords: ['future', 'choice'],
+          vocab: [
+            { word: 'future', phonetic: '/ˈfjuːtʃər/', meaning: '未来，将来', example: 'The future is bright.' },
+            { word: 'choice', phonetic: '/tʃɔɪs/', meaning: '选择，抉择', example: 'It was a difficult choice.' }
+          ]
+        },
+        {
+          id: 2,
+          startTime: 3,
+          endTime: 5,
+          english: 'Learn English to open new doors.',
+          chinese: '学习英语，开启新大门。',
+          keyWords: ['learn', 'open', 'doors'],
+          vocab: [
+            { word: 'learn', phonetic: '/lɜːrn/', meaning: '学习，学会', example: 'I want to learn English.' },
+            { word: 'open', phonetic: '/ˈoʊpən/', meaning: '打开，开启', example: 'Open the door please.' },
+            { word: 'door', phonetic: '/dɔːr/', meaning: '门，门口', example: 'The door is closed.' }
+          ]
+        },
+        {
+          id: 3,
+          startTime: 5,
+          endTime: 7,
+          english: 'The world is waiting for you.',
+          chinese: '世界在等待着你。',
+          keyWords: ['world', 'waiting'],
+          vocab: [
+            { word: 'world', phonetic: '/wɜːrld/', meaning: '世界，地球', example: 'The world is beautiful.' },
+            { word: 'waiting', phonetic: '/ˈweɪtɪŋ/', meaning: '等待，等候', example: 'I am waiting for you.' }
+          ]
+        },
+        {
+          id: 4,
+          startTime: 7,
+          endTime: 9,
+          english: 'Start your journey today.',
+          chinese: '今天就开始你的旅程。',
+          keyWords: ['start', 'journey'],
+          vocab: [
+            { word: 'start', phonetic: '/stɑːrt/', meaning: '开始，启动', example: 'Let\'s start now.' },
+            { word: 'journey', phonetic: '/ˈdʒɜːrni/', meaning: '旅程，旅途', example: 'It was a long journey.' }
+          ]
+        },
+        {
+          id: 5,
+          startTime: 9,
+          endTime: 11,
+          english: 'Every word counts.',
+          chinese: '每一个单词都很重要。',
+          keyWords: ['every', 'counts'],
+          vocab: [
+            { word: 'every', phonetic: '/ˈevri/', meaning: '每一个，每个', example: 'Every day is special.' },
+            { word: 'count', phonetic: '/kaʊnt/', meaning: '计数，重要', example: 'Your opinion counts.' }
+          ]
+        },
+        {
+          id: 6,
+          startTime: 11,
+          endTime: 13,
+          english: 'Practice makes perfect.',
+          chinese: '熟能生巧。',
+          keyWords: ['practice', 'perfect'],
+          vocab: [
+            { word: 'practice', phonetic: '/ˈpræktɪs/', meaning: '练习，实践', example: 'Practice every day.' },
+            { word: 'perfect', phonetic: '/ˈpɜːrfɪkt/', meaning: '完美的，理想的', example: 'You are perfect.' }
+          ]
+        },
+        {
+          id: 7,
+          startTime: 13,
+          endTime: 15,
+          english: 'Keep going, you can do it!',
+          chinese: '继续前进，你一定可以！',
+          keyWords: ['keep', 'going'],
+          vocab: [
+            { word: 'keep', phonetic: '/kiːp/', meaning: '保持，继续', example: 'Keep trying!' },
+            { word: 'going', phonetic: '/ˈɡoʊɪŋ/', meaning: '进行，去', example: 'How is it going?' }
+          ]
+        }
+      ]
+    };
+
+    let currentMode = 'bilingual';
+    let currentSubtitleId = null;
+    let isPlaying = false;
+    let isLooping = false;
+    let loopStart = 0;
+    let loopEnd = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+
+    const video = document.getElementById('videoPlayer');
+    const scriptContainer = document.getElementById('scriptContainer');
+    const vocabContainer = document.getElementById('vocabContainer');
+
+    // 更新「本课目标」信息条：目标、难度、字幕句数、内容状态（含视频 / 字幕练习）
+    function updateLessonGoalBar() {
+      const goalEl = document.getElementById('lessonGoalText');
+      const levelEl = document.getElementById('lessonLevelText');
+      const countEl = document.getElementById('lessonSentenceCount');
+      const sourceEl = document.getElementById('lessonSourceStatus');
+      if (!goalEl) return;
+
+      const sentenceTotal = (videoData.subtitles || []).length;
+      if (countEl) countEl.textContent = sentenceTotal + ' 句字幕';
+
+      // 有视频源 → 含视频；否则只有字幕 → 字幕练习
+      const hasVideo = !!(videoData.videoUrl || videoData.sourceId);
+      if (sourceEl) {
+        sourceEl.textContent = hasVideo ? '含视频' : '字幕练习';
+        sourceEl.style.color = hasVideo ? 'var(--success-color)' : 'var(--warning-color)';
+        sourceEl.style.fontWeight = '600';
+      }
+
+      if (currentLevelData) {
+        const stars = '★'.repeat(currentLevelData.difficulty) + '☆'.repeat(5 - currentLevelData.difficulty);
+        if (levelEl) levelEl.textContent = `难度 ${currentLevelData.difficulty}/5 ${stars} · ${currentLevelData.name}`;
+        if (goalEl) goalEl.textContent = currentLevelData.goal
+          ? currentLevelData.goal.replace(/[。.!！]$/, '')
+          : '逐句听懂全文，掌握重点词句，并能用中文复述大意';
+      } else {
+        if (levelEl) levelEl.textContent = '难度 —';
+        if (goalEl) goalEl.textContent = '逐句听懂全文，掌握重点词句，并能用中文复述大意';
+      }
+    }
+
+    function init() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const videoId = urlParams.get('videoId');
+      const levelId = urlParams.get('levelId');
+      
+      loadLevelFromUrl();
+      
+      if (videoId) {
+        const storedVideos = JSON.parse(localStorage.getItem('linguaview_videos') || '[]');
+        const storedVideo = storedVideos.find(v => v.id == videoId);
+        if (storedVideo) {
+          videoData.id = storedVideo.id;
+          videoData.title = storedVideo.title;
+          videoData.videoUrl = storedVideo.videoUrl || '';
+          videoData.sourceId = storedVideo.sourceId || null;
+          videoData.subtitles = storedVideo.subtitles || videoData.subtitles;
+        }
+      }
+
+      // Load level video if levelId provided
+      if (levelId) {
+        currentLevelId = levelId;
+        currentLevelData = window.getLevelById(levelId);
+        const levelVideos = window.getSampleVideosForLevel(levelId);
+        const matchedVideo = levelVideos.find(v => v.id == videoId);
+        if (matchedVideo) {
+          videoData.id = matchedVideo.id;
+          videoData.title = matchedVideo.title;
+          videoData.subtitles = matchedVideo.subtitles || videoData.subtitles;
+        }
+      }
+
+      // If no videoUrl and level data available, try to use first level video
+      if (!videoData.videoUrl && currentLevelData && currentLevelData.sampleVideos.length > 0) {
+        const firstLevelVideo = currentLevelData.sampleVideos[0];
+        if (firstLevelVideo.subtitles) {
+          videoData.title = firstLevelVideo.title;
+          videoData.subtitles = firstLevelVideo.subtitles;
+        }
+      }
+
+      video.src = videoData.videoUrl;
+      document.getElementById('placeholderTitle').textContent = videoData.title;
+      if (videoData.videoUrl) {
+        document.getElementById('videoPlaceholder').classList.add('hidden');
+      }
+      // 本地入库的视频：等从 IndexedDB 读出后再设置视频源
+      if (!videoData.videoUrl && videoData.sourceId) {
+        PersistentVideo.getVideoURL(videoData.sourceId).then(url => {
+          if (url) {
+            videoData.videoUrl = url;
+            video.src = url;
+            video.load();
+            document.getElementById('videoPlaceholder').classList.add('hidden');
+          }
+        }).catch(err => console.warn('读取本地视频失败:', err));
+      }
+      renderScript();
+      updateStats();
+      updateLevelInfo();
+      updateLessonGoalBar();
+
+      video.ontimeupdate = () => {
+        updateProgress();
+        syncSubtitles();
+        handleLoop();
+      };
+
+      video.onloadedmetadata = () => {
+        document.getElementById('timeDisplay').textContent = `00:00 / ${formatTime(video.duration)}`;
+      };
+    }
+
+    function updateLevelInfo() {
+      const scriptContainer = document.getElementById('scriptContainer');
+      const levelHtml = getLevelInfoHtml();
+      if (levelHtml) {
+        const existing = scriptContainer.querySelector('.level-info-bar');
+        if (existing) existing.remove();
+        const quickSelect = scriptContainer.querySelector('.level-quick-select');
+        if (quickSelect) quickSelect.remove();
+        
+        scriptContainer.insertAdjacentHTML('beforebegin', levelHtml);
+      }
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.querySelector(`.mode-btn[data-mode="${mode}"]`);
+      if (activeBtn) activeBtn.classList.add('active');
+      renderScript();
+    }
+
+    function renderScript() {
+      scriptContainer.innerHTML = videoData.subtitles.map(sub => {
+        let englishHtml = '';
+        let chineseHtml = '';
+
+        switch (currentMode) {
+          case 'bilingual':
+            englishHtml = `<div class="script-english">${sub.english}</div>`;
+            chineseHtml = `<div class="script-chinese">${sub.chinese}</div>`;
+            break;
+          case 'english':
+            englishHtml = `<div class="script-english">${sub.english}</div>`;
+            break;
+          case 'chinese':
+            chineseHtml = `<div class="script-chinese">${sub.chinese}</div>`;
+            break;
+          case 'dictation':
+            englishHtml = `<div class="script-english"><input type="text" class="blank-input" data-subid="${sub.id}" data-fulltext="${sub.english}" onblur="checkDictation(this)" placeholder="请输入英文句子"></div>`;
+            break;
+          case 'blank':
+            englishHtml = `<div class="script-english">${renderBlankMode(sub)}</div>`;
+            chineseHtml = `<div class="script-chinese">${sub.chinese}</div>`;
+            break;
+          case 'reading':
+            englishHtml = `<div class="script-english">${sub.english}</div>`;
+            break;
+          case 'cnToEn':
+            chineseHtml = `<div class="script-chinese">${sub.chinese}</div>`;
+            englishHtml = `<div class="script-english"><input type="text" class="blank-input" data-subid="${sub.id}" data-fulltext="${sub.english}" onblur="checkDictation(this)" placeholder="请翻译为英文"></div>`;
+            break;
+        }
+
+        const levelDifficultyBadge = currentLevelData ? `<span style="font-size: 10px; padding: 2px 6px; background: ${currentLevelData.color}20; color: ${currentLevelData.color}; border-radius: 4px; margin-left: 6px;">难度${currentLevelData.difficulty}/5</span>` : '';
+        
+        return `
+          <div class="script-item ${currentSubtitleId === sub.id ? 'active' : ''}" data-id="${sub.id}" onclick="jumpToSubtitle(${sub.id})">
+            <div class="script-actions">
+              <button class="action-btn" onclick="event.stopPropagation(); playSingle(${sub.id})" title="播放">
+                <i class="fa-solid fa-play"></i>
+              </button>
+              <button class="action-btn ${loopStart === sub.startTime ? 'looping' : ''}" onclick="event.stopPropagation(); toggleSingleLoop(${sub.id})" title="单句循环">
+                <i class="fa-solid fa-repeat"></i>
+              </button>
+            </div>
+            <div class="script-content">
+              <div class="script-time">${formatTime(sub.startTime)} - ${formatTime(sub.endTime)} ${levelDifficultyBadge}</div>
+              ${englishHtml}
+              ${chineseHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderBlankMode(sub) {
+      let text = sub.english;
+      sub.keyWords.forEach(keyword => {
+        const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+        text = text.replace(regex, `<input type="text" class="blank-input" data-subid="${sub.id}" data-word="${keyword}" onblur="checkBlank(this)" placeholder="____">`);
+      });
+      return text;
+    }
+
+    function checkBlank(input) {
+      const expected = input.dataset.word.toLowerCase();
+      const actual = input.value.trim().toLowerCase();
+      
+      if (actual === expected) {
+        input.classList.add('correct', 'completed');
+        input.disabled = true;
+        correctCount++;
+      } else {
+        input.classList.add('wrong');
+        wrongCount++;
+        setTimeout(() => {
+          input.classList.remove('wrong');
+          input.value = '';
+        }, 1000);
+      }
+      updateStats();
+    }
+
+    function checkDictation(input) {
+      const expected = input.dataset.fulltext.toLowerCase();
+      const actual = input.value.trim().toLowerCase();
+      
+      if (actual === expected) {
+        input.classList.add('correct', 'completed');
+        input.disabled = true;
+        correctCount++;
+      } else {
+        input.classList.add('wrong');
+        wrongCount++;
+        setTimeout(() => {
+          input.classList.remove('wrong');
+        }, 1000);
+      }
+      updateStats();
+    }
+
+    function jumpToSubtitle(subId) {
+      const sub = videoData.subtitles.find(s => s.id === subId);
+      if (sub) {
+        video.currentTime = sub.startTime;
+        currentSubtitleId = subId;
+        highlightCurrent();
+        showVocab(sub);
+        if (!isPlaying) {
+          video.play();
+          isPlaying = true;
+          updatePlayIcon();
+        }
+      }
+    }
+
+    function playSingle(subId) {
+      const sub = videoData.subtitles.find(s => s.id === subId);
+      if (sub) {
+        video.currentTime = sub.startTime;
+        video.play();
+        isPlaying = true;
+        updatePlayIcon();
+        highlightCurrent();
+        
+        const endTime = sub.endTime;
+        const checkEnd = setInterval(() => {
+          if (video.currentTime >= endTime || video.paused) {
+            clearInterval(checkEnd);
+            video.pause();
+            isPlaying = false;
+            updatePlayIcon();
+          }
+        }, 100);
+      }
+    }
+
+    function toggleSingleLoop(subId) {
+      const sub = videoData.subtitles.find(s => s.id === subId);
+      if (!sub) return;
+
+      if (loopStart === sub.startTime && loopEnd === sub.endTime) {
+        isLooping = false;
+        loopStart = 0;
+        loopEnd = 0;
+        document.getElementById('loopIcon').style.color = '#fff';
+        renderScript();
+      } else {
+        isLooping = true;
+        loopStart = sub.startTime;
+        loopEnd = sub.endTime;
+        video.currentTime = loopStart;
+        video.play();
+        isPlaying = true;
+        updatePlayIcon();
+        document.getElementById('loopIcon').style.color = '#22c55e';
+        renderScript();
+      }
+    }
+
+    function toggleLoopMode() {
+      if (!currentSubtitleId) {
+        showToast('请先选择一句字幕');
+        return;
+      }
+      const sub = videoData.subtitles.find(s => s.id === currentSubtitleId);
+      toggleSingleLoop(sub.id);
+    }
+
+    function handleLoop() {
+      if (isLooping && video.currentTime >= loopEnd) {
+        video.currentTime = loopStart;
+      }
+    }
+
+    function syncSubtitles() {
+      const currentTime = video.currentTime;
+      const sub = videoData.subtitles.find(s => currentTime >= s.startTime && currentTime <= s.endTime);
+      
+      if (sub && sub.id !== currentSubtitleId) {
+        currentSubtitleId = sub.id;
+        highlightCurrent();
+        showVocab(sub);
+      }
+    }
+
+    function highlightCurrent() {
+      document.querySelectorAll('.script-item').forEach(el => {
+        el.classList.remove('active');
+        if (parseInt(el.dataset.id) === currentSubtitleId) {
+          el.classList.add('active');
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
+
+    let _wbCache = null;
+    function getWordbook() {
+      if (_wbCache) return _wbCache;
+      try { _wbCache = JSON.parse(localStorage.getItem('linguaview_wordbook') || '[]'); } catch { _wbCache = []; }
+      return _wbCache;
+    }
+    function saveWordbook(wb) { _wbCache = wb; localStorage.setItem('linguaview_wordbook', JSON.stringify(wb)); updateWordbookCount(); }
+    function isFavorited(word) { return getWordbook().some(w => w.word.toLowerCase() === word.toLowerCase()); }
+    function toggleFavorite(wordObj, source = '') {
+      const wb = getWordbook();
+      const idx = wb.findIndex(w => w.word.toLowerCase() === wordObj.word.toLowerCase());
+      if (idx >= 0) { wb.splice(idx, 1); showToast(`已从生词本移除「${wordObj.word}」`, 'info'); }
+      else { wb.unshift({ ...wordObj, addedAt: Date.now(), source }); showToast(`已收藏「${wordObj.word}」到生词本`, 'success'); }
+      saveWordbook(wb);
+      // Update card UI
+      document.querySelectorAll('.vocab-card').forEach(card => {
+        const favBtn = card.querySelector('.vocab-btn.fav');
+        const wordEl = card.querySelector('.vocab-word');
+        if (favBtn && wordEl && wordEl.textContent.toLowerCase() === wordObj.word.toLowerCase()) {
+          const fav = isFavorited(wordObj.word);
+          favBtn.classList.toggle('active', fav);
+          favBtn.innerHTML = fav ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
+          card.classList.toggle('favorited', fav);
+        }
+      });
+      // If modal open, update its fav button
+      const modalFav = document.querySelector('.wm-footer .fav-btn');
+      if (modalFav) {
+        const fav = isFavorited(wordObj.word);
+        modalFav.classList.toggle('active', fav);
+        modalFav.innerHTML = fav ? '<i class="fa-solid fa-star"></i> 已收藏' : '<i class="fa-regular fa-star"></i> 加入生词本';
+      }
+      // If wordbook tab visible, re-render
+      const activeTab = document.querySelector('.panel-tab.active');
+      if (activeTab && activeTab.dataset.tab === 'wordbook') renderWordbook();
+    }
+    function updateWordbookCount() {
+      const cnt = getWordbook().length;
+      const el = document.getElementById('wordbookCount');
+      if (el) el.textContent = cnt;
+    }
+
+    function speakWord(text, rate = 0.9) {
+      if (!window.speechSynthesis) { showToast('浏览器不支持语音合成', 'warning'); return; }
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'en-US'; u.rate = rate; u.pitch = 1;
+      // Try to pick a good English voice
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v => /en[-_]US/i.test(v.lang) && /female|samantha|google/i.test(v.name)) ||
+                        voices.find(v => /en[-_](US|GB)/i.test(v.lang)) ||
+                        voices.find(v => v.lang.startsWith('en'));
+      if (preferred) u.voice = preferred;
+      window.speechSynthesis.speak(u);
+      return u;
+    }
+    // Ensure voices are loaded (Chrome loads asynchronously)
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
+
+    function switchPanelTab(tab) {
+      document.querySelectorAll('.panel-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      document.getElementById('vocabContainer').classList.toggle('hidden', tab !== 'vocab');
+      const wb = document.getElementById('wordbookContainer');
+      wb.classList.toggle('hidden', tab !== 'wordbook');
+      if (tab === 'wordbook') renderWordbook();
+    }
+
+    function showVocab(sub) {
+      if (!sub.vocab || sub.vocab.length === 0) {
+        vocabContainer.innerHTML = `
+          <div class="no-vocab">
+            <i class="fa-solid fa-search" style="font-size: 32px; margin-bottom: 8px;"></i>
+            <p>暂无生词</p>
+            ${currentLevelData ? `<p style="font-size: 12px; margin-top: 8px;">当前等级: ${currentLevelData.name}</p>` : ''}
+          </div>
+        `;
+        return;
+      }
+      const levelTag = currentLevelData ? `<span style="display: inline-block; font-size: 10px; padding: 2px 6px; background: ${currentLevelData.color}20; color: ${currentLevelData.color}; border-radius: 4px; margin-bottom: 8px;">${currentLevelData.name}词汇</span>` : '';
+      vocabContainer.innerHTML = levelTag + sub.vocab.map(v => {
+        const fav = isFavorited(v.word);
+        return `
+        <div class="vocab-card ${fav ? 'favorited' : ''}">
+          <div class="vocab-top">
+            <div class="vocab-word-row">
+              <span class="vocab-word" onclick="openWordDetail(${JSON.stringify(v).replace(/"/g,'&quot;')})">${v.word}</span>
+              <span class="vocab-phonetic">${v.phonetic || ''}</span>
+            </div>
+            <div class="vocab-actions">
+              <button class="vocab-btn play" title="发音" onclick="event.stopPropagation();speakWord('${v.word.replace(/'/g, "\\'")}')"><i class="fa-solid fa-volume-high"></i></button>
+              <button class="vocab-btn fav ${fav ? 'active' : ''}" title="${fav ? '取消收藏' : '收藏到生词本'}" onclick="event.stopPropagation();toggleFavorite(${JSON.stringify(v).replace(/"/g,'&quot;')})">
+                <i class="${fav ? 'fa-solid fa-star' : 'fa-regular fa-star'}"></i>
+              </button>
+            </div>
+          </div>
+          <div class="vocab-meaning">${v.meaning || ''}</div>
+          ${v.example ? `
+          <div class="vocab-example-row">
+            <span class="vocab-example-text">"${v.example}"${v.exampleZh ? `<span class="example-zh">${v.exampleZh}</span>` : ''}</span>
+            <button class="vocab-btn play" title="读例句" onclick="event.stopPropagation();speakWord(${JSON.stringify(v.example).replace(/"/g,'&quot;')}, 0.85)"><i class="fa-solid fa-play"></i></button>
+          </div>` : ''}
+        </div>
+      `;
+      }).join('');
+    }
+
+    function openWordDetail(wordObj) {
+      // Enrich meaning: if simple string, convert to array
+      const meanings = Array.isArray(wordObj.meaning) ? wordObj.meaning : (wordObj.meaning ? [{ pos: '', def: wordObj.meaning }] : []);
+      const examples = wordObj.examples || (wordObj.example ? [{ en: wordObj.example, zh: wordObj.exampleZh || '' }] : []);
+      const fav = isFavorited(wordObj.word);
+
+      const modal = document.createElement('div');
+      modal.className = 'word-modal';
+      modal.innerHTML = `
+        <div class="word-modal-content">
+          <div class="word-modal-header">
+            <button class="word-modal-close" onclick="this.closest('.word-modal').remove()"><i class="fa-solid fa-xmark"></i></button>
+            <div class="wm-word">${wordObj.word}</div>
+            <div class="wm-phonetic">
+              ${wordObj.phonetic || ''}
+              <button class="wm-play" onclick="playWordDetail('${wordObj.word.replace(/'/g, "\\'")}', this)" title="发音"><i class="fa-solid fa-volume-high"></i></button>
+            </div>
+          </div>
+          <div class="word-modal-body">
+            <div class="wm-meaning-section">
+              <div class="wm-meaning-label">释义</div>
+              <div class="wm-meaning-list">
+                ${meanings.map(m => `<div class="wm-meaning-item">${m.pos ? `<strong style="color: var(--accent-blue); margin-right:6px;">${m.pos}</strong>` : ''}${m.def}</div>`).join('')}
+                ${meanings.length === 0 ? '<div class="wm-meaning-item">暂无释义信息</div>' : ''}
+              </div>
+            </div>
+            <div class="wm-example-section">
+              <div class="wm-meaning-label">例句与用法</div>
+              ${examples.length > 0 ? examples.map(ex => `
+                <div class="wm-example-card">
+                  <div class="wm-example-en"><i class="fa-solid fa-quote-left"></i><span>${ex.en}</span></div>
+                  ${ex.zh ? `<div class="wm-example-zh">${ex.zh}</div>` : ''}
+                  <div style="margin-top:8px;">
+                    <button class="vocab-btn play" onclick="speakWord(${JSON.stringify(ex.en).replace(/"/g,'&quot;')}, 0.85)" style="width:auto;padding:6px 12px;font-size:11px;"><i class="fa-solid fa-play"></i> 朗读</button>
+                  </div>
+                </div>
+              `).join('') : '<div class="wm-example-card"><div class="wm-example-en">暂无例句</div></div>'}
+            </div>
+            <div class="wm-footer">
+              <button class="fav-btn ${fav ? 'active' : ''}" onclick="toggleFavorite(${JSON.stringify(wordObj).replace(/"/g,'&quot;')})">
+                <i class="${fav ? 'fa-solid fa-star' : 'fa-regular fa-star'}"></i>${fav ? '已收藏' : '加入生词本'}
+              </button>
+              <button onclick="speakWord('${wordObj.word.replace(/'/g, "\\'")}', 0.9)"><i class="fa-solid fa-volume-high"></i> 慢速发音</button>
+            </div>
+          </div>
+        </div>
+      `;
+      modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+      document.body.appendChild(modal);
+    }
+
+    function playWordDetail(word, btn) {
+      btn.classList.add('playing');
+      const u = speakWord(word);
+      if (u) u.onend = () => btn.classList.remove('playing');
+      setTimeout(() => btn.classList.remove('playing'), 2500);
+    }
+
+    function renderWordbook() {
+      const wb = getWordbook();
+      const container = document.getElementById('wordbookContainer');
+      if (wb.length === 0) {
+        container.innerHTML = `
+          <div class="no-vocab">
+            <i class="fa-regular fa-star" style="font-size: 32px; margin-bottom: 8px;"></i>
+            <p>还没有收藏的单词</p>
+            <p style="font-size: 12px; margin-top: 6px;">在「词汇解析」面板中点击 ⭐ 收藏生词</p>
+          </div>`;
+        return;
+      }
+      container.innerHTML = `
+        <div class="wordbook-toolbar">
+          <button class="wb-btn" onclick="reviewWordbook()"><i class="fa-solid fa-brain"></i> 复习模式</button>
+          <button class="wb-btn danger" onclick="if(confirm('确定清空所有生词？此操作不可恢复')){saveWordbook([]);renderWordbook();}"><i class="fa-solid fa-trash"></i> 清空</button>
+          <span style="margin-left:auto;font-size:11px;color:var(--text-muted);align-self:center;">共 ${wb.length} 词</span>
+        </div>
+        ${wb.map(v => {
+          const d = new Date(v.addedAt);
+          const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+          return `
+          <div class="vocab-card favorited">
+            <div class="vocab-top">
+              <div class="vocab-word-row">
+                <span class="vocab-word" onclick="openWordDetail(${JSON.stringify(v).replace(/"/g,'&quot;')})">${v.word}</span>
+                <span class="vocab-phonetic">${v.phonetic || ''}</span>
+              </div>
+              <div class="vocab-actions">
+                <button class="vocab-btn play" title="发音" onclick="speakWord('${v.word.replace(/'/g, "\\'")}')"><i class="fa-solid fa-volume-high"></i></button>
+                <button class="vocab-btn fav active" title="取消收藏" onclick="toggleFavorite(${JSON.stringify(v).replace(/"/g,'&quot;')})"><i class="fa-solid fa-star"></i></button>
+              </div>
+            </div>
+            <div class="vocab-meaning">${Array.isArray(v.meaning) ? v.meaning[0]?.def || '' : (v.meaning || '')}</div>
+            ${v.example ? `<div class="vocab-example-row"><span class="vocab-example-text">"${v.example}"</span></div>` : ''}
+            <div style="margin-top:8px;font-size:10px;color:var(--text-muted);display:flex;gap:8px;">
+              <span><i class="fa-regular fa-clock"></i> ${dateStr} 收藏</span>
+              ${v.source ? `<span><i class="fa-solid fa-tag"></i> ${v.source}</span>` : ''}
+            </div>
+          </div>
+          `;
+        }).join('')}
+      `;
+    }
+
+    function reviewWordbook() {
+      const wb = getWordbook();
+      if (wb.length === 0) { showToast('生词本为空，快去收藏一些单词吧！', 'info'); return; }
+      // Shuffle
+      const shuffled = [...wb].sort(() => Math.random() - 0.5);
+      let i = 0, showMeaning = false;
+      const modal = document.createElement('div');
+      modal.className = 'word-modal';
+      modal.innerHTML = `
+        <div class="word-modal-content" style="max-width:420px;">
+          <div class="word-modal-header">
+            <button class="word-modal-close" onclick="this.closest('.word-modal').remove()"><i class="fa-solid fa-xmark"></i></button>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">生词本复习</div>
+            <div style="font-size:36px;font-weight:800;background:linear-gradient(135deg,var(--gradient-start),var(--gradient-end));-webkit-background-clip:text;-webkit-text-fill-color:transparent;" id="rwWord"></div>
+            <div style="font-size:14px;color:var(--text-muted);font-style:italic;" id="rwPhonetic"></div>
+          </div>
+          <div class="word-modal-body">
+            <div id="rwMeaningBox" style="min-height:60px;background:var(--bg-secondary);border-radius:10px;padding:16px;text-align:center;font-size:18px;font-weight:600;color:var(--accent-blue);cursor:pointer;" onclick="reviewShowMeaning()">
+              <i class="fa-regular fa-eye" style="font-size:22px;"></i>
+              <div style="font-size:13px;color:var(--text-muted);margin-top:6px;">点击显示释义</div>
+            </div>
+            <div id="rwMeaningText" style="display:none;text-align:center;font-size:18px;font-weight:600;color:var(--text-primary);padding:16px;background:var(--accent-bg);border-radius:10px;"></div>
+            <div id="rwExample" style="margin-top:14px;font-size:13px;color:var(--text-secondary);font-style:italic;background:var(--bg-secondary);padding:10px 12px;border-radius:8px;"></div>
+            <div data-rw-actions style="display:flex;gap:10px;margin-top:20px;">
+              <button onclick="speakWord(document.getElementById('rwWord').textContent)" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border-color);background:var(--bg-card);cursor:pointer;color:var(--text-secondary);font-size:13px;"><i class="fa-solid fa-volume-high"></i> 发音</button>
+              <button onclick="reviewNext()" style="flex:2;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--gradient-start),var(--gradient-end));color:white;cursor:pointer;font-size:13px;font-weight:600;">下一个 <span id="rwProgress">1/${shuffled.length}</span></button>
+            </div>
+            <button onclick="reviewExit()" style="width:100%;margin-top:10px;padding:8px;border:none;background:none;color:var(--text-muted);font-size:12px;cursor:pointer;"><i class="fa-solid fa-xmark"></i> 结束复习</button>
+          </div>
+        </div>
+      `;
+      modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+      document.body.appendChild(modal);
+
+      function load() {
+        const finishRow = modal.querySelector('[data-rw-actions]');
+        if (i >= shuffled.length) {
+          document.getElementById('rwWord').textContent = '🎉 复习完成！';
+          document.getElementById('rwPhonetic').textContent = '';
+          document.getElementById('rwMeaningBox').style.display = 'none';
+          document.getElementById('rwMeaningText').style.display = 'none';
+          document.getElementById('rwExample').style.display = 'none';
+          if (finishRow) finishRow.style.display = 'none';
+          return;
+        }
+        const v = shuffled[i];
+        document.getElementById('rwWord').textContent = v.word;
+        document.getElementById('rwPhonetic').textContent = v.phonetic || '';
+        document.getElementById('rwMeaningBox').style.display = 'block';
+        document.getElementById('rwMeaningText').style.display = 'none';
+        document.getElementById('rwMeaningText').textContent = Array.isArray(v.meaning) ? v.meaning[0]?.def || '' : (v.meaning || '');
+        document.getElementById('rwExample').textContent = v.example ? `"${v.example}"` : '';
+        document.getElementById('rwProgress').textContent = `${i+1}/${shuffled.length}`;
+        showMeaning = false;
+      }
+      window.reviewShowMeaning = () => {
+        document.getElementById('rwMeaningBox').style.display = 'none';
+        document.getElementById('rwMeaningText').style.display = 'block';
+        showMeaning = true;
+      };
+      window.reviewNext = () => { i++; load(); };
+      window.reviewExit = () => modal.remove();
+      load();
+    }
+
+    // Init wordbook count on page load
+    updateWordbookCount();
+
+    function togglePlay() {
+      const placeholder = document.getElementById('videoPlaceholder');
+      if (!videoData.videoUrl) {
+        showToast('这是示例课程，暂未接入视频源；可先用字幕做听写、挖空与中译英练习', 'warning');
+        return;
+      }
+      placeholder.classList.add('hidden');
+      if (video.paused) {
+        video.play().catch(() => {
+          showToast('视频加载失败，请检查视频源', 'error');
+          placeholder.classList.remove('hidden');
+        });
+        isPlaying = true;
+      } else {
+        video.pause();
+        isPlaying = false;
+      }
+      updatePlayIcon();
+    }
+
+    function toggleMute() {
+      video.muted = !video.muted;
+      const icon = document.getElementById('muteIcon');
+      icon.className = video.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+      document.getElementById('volumeSlider').value = video.muted ? 0 : video.volume;
+    }
+
+    function setVolume(value) {
+      video.volume = parseFloat(value);
+      video.muted = video.volume === 0;
+      const icon = document.getElementById('muteIcon');
+      icon.className = video.muted ? 'fa-solid fa-volume-xmark' : (video.volume < 0.5 ? 'fa-solid fa-volume-low' : 'fa-solid fa-volume-high');
+    }
+
+    function setSpeed(speed) {
+      video.playbackRate = parseFloat(speed);
+    }
+
+    function toggleFullscreen() {
+      const wrapper = document.querySelector('.video-wrapper');
+      if (!document.fullscreenElement) {
+        wrapper.requestFullscreen().catch(() => {
+          showToast('全屏不可用', 'warning');
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    function updatePlayIcon() {
+      const icon = document.getElementById('playIcon');
+      icon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+    }
+
+    function updateProgress() {
+      const percent = (video.currentTime / video.duration) * 100;
+      document.getElementById('progressFill').style.width = `${percent}%`;
+      document.getElementById('timeDisplay').textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+    }
+
+    function seekVideo(event) {
+      const rect = event.target.getBoundingClientRect();
+      const percent = (event.clientX - rect.left) / rect.width;
+      video.currentTime = percent * video.duration;
+    }
+
+    function formatTime(seconds) {
+      if (isNaN(seconds) || !isFinite(seconds)) return '00:00';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateStats() {
+      document.getElementById('correctCount').textContent = correctCount;
+      document.getElementById('wrongCount').textContent = wrongCount;
+      document.getElementById('totalCount').textContent = videoData.subtitles.length;
+    }
+
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast-notification ${type}`;
+      const icons = {
+        success: 'fa-circle-check',
+        error: 'fa-circle-xmark',
+        warning: 'fa-triangle-exclamation',
+        info: 'fa-circle-info'
+      };
+      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i><span>${message}</span>`;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinguaView - 管理员说明</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', sans-serif; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 820px; margin: 0 auto; }
+    .header { text-align: center; color: white; margin-bottom: 36px; }
+    .header h1 { font-size: 32px; font-weight: 700; margin-bottom: 10px; }
+    .header p { font-size: 15px; opacity: 0.85; }
+    .badge { display: inline-block; margin-top: 14px; padding: 5px 14px; border-radius: 20px; background: rgba(239,68,68,0.18); color: #fca5a5; font-size: 12px; font-weight: 600; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 26px; margin-bottom: 20px; }
+    .card h2 { font-size: 18px; color: #f1f5f9; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+    .card h2 i { color: #60a5fa; }
+    .card p, .card li { color: #94a3b8; font-size: 14px; line-height: 1.75; }
+    .card p { margin-bottom: 10px; }
+    .card ul, .card ol { padding-left: 22px; margin-bottom: 10px; }
+    .card li { margin-bottom: 6px; }
+    .card strong { color: #e2e8f0; }
+    code { background: #334155; color: #e2e8f0; padding: 2px 7px; border-radius: 5px; font-size: 13px; font-family: Consolas, 'Courier New', monospace; }
+    .danger { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.35); }
+    .danger h2 { color: #fca5a5; }
+    .danger h2 i { color: #f87171; }
+    .ok { background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.3); }
+    .ok h2 { color: #86efac; }
+    .ok h2 i { color: #4ade80; }
+    .checklist { list-style: none; padding-left: 0 !important; }
+    .checklist li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px dashed #334155; }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist i { color: #60a5fa; margin-top: 4px; }
+    .footer-links { text-align: center; margin-top: 20px; }
+    .footer-links a { color: #94a3b8; text-decoration: none; font-size: 13px; margin: 0 4px; }
+    .footer-links a:hover { color: #60a5fa; }
+    @media (max-width: 600px) {
+      .header h1 { font-size: 24px; }
+      .card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1><i class="fa-solid fa-screwdriver-wrench"></i> 管理员说明</h1>
+      <p>面向课程维护者，不是学习者文档</p>
+      <span class="badge"><i class="fa-solid fa-triangle-exclamation"></i> 内部文档 · 请勿公开分享</span>
+    </div>
+
+    <div class="card">
+      <h2><i class="fa-solid fa-door-open"></i> 1. 管理后台入口与口令</h2>
+      <p>管理后台地址：<code>admin.html</code>（不在学习站主导航中，只能从页面页脚的「管理员入口」进入）。</p>
+      <ul>
+        <li>默认口令：<code>linguaview-admin</code>（在 <code>admin.html</code> 的 <code>ADMIN_KEY</code> 常量中修改）。</li>
+        <li>登录状态只保存在当前浏览器会话（<code>sessionStorage</code>），关闭浏览器即失效。</li>
+      </ul>
+      <div class="danger" style="margin-top: 14px; border-radius: 12px; padding: 16px;">
+        <p style="color: #fca5a5; margin-bottom: 0;"><strong>重要：</strong>这是前端口令，只用于挡住普通访客，<strong>不能替代真正的权限控制</strong>。正式上线前必须改为后端登录鉴权。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><i class="fa-solid fa-play"></i> 2. 本地启动网站与后端</h2>
+      <p><strong>只看学习内容：</strong>直接双击任意 HTML 文件即可打开，无需服务器。</p>
+      <p><strong>需要上传视频 / 调用翻译：</strong>请启动本地服务：</p>
+      <ol>
+        <li>双击 <code>启动.bat</code>（会拉起后端并显示访问地址）。</li>
+        <li>在浏览器打开 <code>http://localhost:8090</code>。</li>
+        <li>后端接口位于 <code>api/main.py</code>（FastAPI + SQLite），默认端口 8000。</li>
+      </ol>
+      <p>依赖清单见 <code>api/requirements.txt</code>。</p>
+    </div>
+
+    <div class="card">
+      <h2><i class="fa-solid fa-cloud-arrow-up"></i> 3. 上传课程内容</h2>
+      <ul>
+        <li>视频支持：<code>.mp4 / .mov / .avi / .webm / .mkv</code>，建议单个不超过 500MB。</li>
+        <li>字幕支持：<code>.srt / .vtt</code>，中英混排时按「一行英文 / 一行中文」编写，导入时会自动识别分离。</li>
+        <li>上传后可逐句校对英文与中文，并补充重点词、音标、例句。</li>
+        <li>只有当课程<strong>同时具备可播放视频与字幕</strong>时，才应在前台对外展示；仅字幕的内容应标注为「示例课程」。</li>
+      </ul>
+    </div>
+
+    <div class="card danger">
+      <h2><i class="fa-solid fa-shield-halved"></i> 4. API 密钥安全（务必阅读）</h2>
+      <p>当前翻译与语音识别密钥的存放方式<strong>只适合本机调试</strong>：</p>
+      <ul>
+        <li>密钥由管理员在前台填写，保存在浏览器 <code>localStorage</code> 中（<code>linguaview_baidu_config</code>、<code>linguaview_speech_config</code>）。</li>
+        <li>请求由浏览器直接发往百度接口（部分经公共代理转发）。</li>
+      </ul>
+      <p style="color: #fca5a5;"><strong>正式部署必须整改：</strong>密钥放在后端环境变量中，由后端签名并转发请求，前端不得接触 <code>Secret Key</code>；同时关闭公共代理。</p>
+      <p>本机调试结束后，建议在浏览器设置中清除本站数据，避免密钥残留。</p>
+    </div>
+
+    <div class="card">
+      <h2><i class="fa-solid fa-database"></i> 5. 数据存储现状</h2>
+      <ul>
+        <li><strong>上传的课程</strong>保存在浏览器 <code>localStorage</code>（<code>linguaview_videos</code>），<strong>不跨设备、不跨浏览器</strong>，清除站点数据即丢失。</li>
+        <li><strong>大视频文件</strong>保存在浏览器 IndexedDB（<code>PersistentVideo</code>），同样仅限本机。</li>
+        <li><strong>后端数据库</strong>为本地 SQLite（<code>linguaview.db</code>），仅本机可访问。</li>
+      </ul>
+      <p>因此当前版本不能作为多人协作的内容管理平台；如需正式运营，应把内容迁移到服务端数据库并配对象存储。</p>
+    </div>
+
+    <div class="card ok">
+      <h2><i class="fa-solid fa-clipboard-check"></i> 6. 正式上线前检查清单</h2>
+      <ul class="checklist">
+        <li><i class="fa-solid fa-square-check"></i><span>为每节课程提供<strong>可播放视频 + 双语字幕 + 明确来源</strong>。</span></li>
+        <li><i class="fa-solid fa-square-check"></i><span>移除或标注所有演示用数据，不显示虚构的播放量、观看数、课程数量。</span></li>
+        <li><i class="fa-solid fa-square-check"></i><span>管理后台改为后端登录鉴权，隐藏或移除前端口令。</span></li>
+        <li><i class="fa-solid fa-square-check"></i><span>翻译 / 语音密钥迁到后端，前端不再保存 <code>Secret Key</code>。</span></li>
+        <li><i class="fa-solid fa-square-check"></i><span>账号体系与云端学习进度（当前仅有本机计数）。</span></li>
+        <li><i class="fa-solid fa-square-check"></i><span>字体、图标等静态资源本地化，避免依赖境外 CDN。</span></li>
+        <li><i class="fa-solid fa-square-check"></i><span>补齐隐私政策、版权与素材授权说明。</span></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2><i class="fa-solid fa-scale-balanced"></i> 7. 版权与素材要求</h2>
+      <ul>
+        <li>视频、字幕、影视片段等素材必须确认<strong>可商用或已获授权</strong>，并在课程信息中标注来源。</li>
+        <li>禁止直接使用未授权的影视剧片段作为课程素材。</li>
+        <li>用户上传或生成的内容需确认不侵犯第三方权利。</li>
+      </ul>
+      <p>详细说明见 <a href="声明.html" style="color: #60a5fa;">来源与版权声明</a>。</p>
+    </div>
+
+    <div class="footer-links">
+      <a href="index.html">返回学习站</a> ·
+      <a href="使用指南.html">学习者指南</a> ·
+      <a href="声明.html">来源与版权</a> ·
+      <a href="admin.html">管理后台</a>
+    </div>
+  </div>
+</body>
+</html>

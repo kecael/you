@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinguaView - 学习目录</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="js/theme.js"></script>
+  <style>
+
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      z-index: -1;
+      filter: blur(80px);
+      opacity: var(--blob-opacity);
+    }
+
+    body::before {
+      width: 500px;
+      height: 500px;
+      background: linear-gradient(135deg, var(--gradient-start), var(--accent-blue));
+      top: -150px;
+      right: -100px;
+    }
+
+    body::after {
+      width: 400px;
+      height: 400px;
+      background: linear-gradient(135deg, var(--accent-blue), #10b981);
+      bottom: -100px;
+      left: -80px;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: var(--navbar-bg);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 24px;
+      transition: all 0.3s ease;
+    }
+
+    .navbar.scrolled {
+      background: var(--navbar-bg-scrolled);
+      box-shadow: 0 2px 20px var(--navbar-shadow);
+    }
+
+    .navbar-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-decoration: none;
+    }
+
+    .navbar-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .navbar-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .navbar-links a:hover { color: var(--accent-blue); }
+
+    .navbar-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent-blue);
+      transition: width 0.3s ease;
+    }
+
+    .navbar-links a:hover::after { width: 100%; }
+    .navbar-links a.active { color: var(--accent-blue); }
+    .navbar-links a.active::after { width: 100%; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px 40px; }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .header { padding: 120px 0 40px; text-align: center; }
+    .header h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 12px; animation: fadeInDown 0.6s ease-out; }
+    .header p { color: var(--text-secondary); font-size: 1rem; animation: fadeInUp 0.6s ease-out 0.2s both; }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 20px; transition: all 0.3s; }
+    .back-link:hover { gap: 12px; }
+    .categories { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 60px; }
+    .category-card { background: var(--bg-card); border-radius: var(--radius); padding: 28px; border: 1px solid var(--border-color); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative; overflow: hidden; }
+    .category-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+      transition: left 0.5s ease;
+    }
+    .category-card:hover::before { left: 100%; }
+    .category-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 15px 30px rgba(0,0,0,0.1); border-color: rgba(59,130,246,0.3); }
+    .category-card:active { transform: translateY(-2px) scale(0.98); transition: transform 0.15s ease; }
+    .category-card.active { border-color: var(--accent-blue); background: linear-gradient(135deg, rgba(59,130,246,0.05), rgba(168,85,247,0.05)); box-shadow: 0 4px 15px rgba(59,130,246,0.15); }
+    .category-card.active::before { left: 0; }
+    .category-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 26px; }
+    .category-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .category-count { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+    .category-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+    .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+    .video-card { background: var(--bg-card); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border-color); transition: all 0.3s ease; }
+    .video-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+    .video-thumbnail { aspect-ratio: 16/9; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .video-thumbnail .play-icon { width: 56px; height: 56px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
+    .video-thumbnail:hover .play-icon { transform: scale(1.1); background: var(--bg-card); }
+    .video-thumbnail .play-icon i { color: var(--accent-blue); font-size: 24px; margin-left: 4px; }
+    .video-info { padding: 20px; }
+    .video-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .video-meta { display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+    .video-meta span { display: flex; align-items: center; gap: 4px; }
+    .video-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .video-tag { padding: 4px 10px; background: rgba(59,130,246,0.1); color: var(--accent-blue); border-radius: 12px; font-size: 12px; font-weight: 500; }
+    .video-action { margin-top: 16px; }
+    .btn { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; border: 2px solid var(--border-color); display: inline-flex; align-items: center; gap: 8px; text-decoration: none; background: var(--bg-card); color: var(--text-primary); }
+    .btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(59,130,246,0.05); }
+    .section-header { text-align: center; margin-bottom: 48px; }
+    .section-title { font-size: 2rem; font-weight: 700; margin-bottom: 12px; background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .section-subtitle { color: var(--text-secondary); font-size: 1rem; }
+    .footer { background: var(--bg-card); padding: 40px 0; border-top: 1px solid var(--border-color); text-align: center; color: var(--text-secondary); font-size: 14px; margin-top: 60px; }
+
+    /* Level Filter Styles */
+    .level-filter {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 30px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-md);
+    }
+
+    .level-filter-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .level-filter-title i { color: var(--accent-blue); }
+
+    .level-filter-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .level-filter-btn {
+      padding: 10px 18px;
+      border: 2px solid var(--border-color);
+      background: var(--bg-primary);
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+    }
+
+    .level-filter-btn:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+
+    .level-filter-btn.active {
+      background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+    }
+
+    .level-filter-btn .vocab-count {
+      font-size: 11px;
+      padding: 2px 6px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+
+    .level-filter-btn.active .vocab-count {
+      background: rgba(255,255,255,0.25);
+    }
+
+    .level-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .video-level-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(59,130,246,0.05);
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .video-level-info .level-name {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .video-level-info .level-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+    .stat-card-value {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-card-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .category-detail-view {
+      display: none;
+      animation: fadeIn 0.4s ease;
+      padding-top: 80px;
+    }
+
+    .category-detail-view.active {
+      display: block;
+    }
+
+    .category-detail-header {
+      padding: 40px 30px;
+      border-radius: 20px;
+      color: white;
+      margin-bottom: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .category-detail-header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 300px;
+      height: 300px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+    }
+
+    .category-detail-header::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: -10%;
+      width: 200px;
+      height: 200px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 50%;
+    }
+
+    .category-detail-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px 16px;
+      border-radius: 10px;
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 20px;
+      transition: all 0.3s;
+      cursor: pointer;
+      border: none;
+      position: relative;
+      z-index: 2;
+    }
+
+    .category-detail-back:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateX(-4px);
+    }
+
+    .category-detail-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .category-detail-title i {
+      font-size: 28px;
+    }
+
+    .category-detail-desc {
+      font-size: 16px;
+      opacity: 0.9;
+      line-height: 1.6;
+      position: relative;
+      z-index: 1;
+      max-width: 700px;
+    }
+
+    .category-detail-stats {
+      display: flex;
+      gap: 30px;
+      margin-top: 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .category-detail-stat {
+      text-align: center;
+    }
+
+    .category-detail-stat-value {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .category-detail-stat-label {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .category-detail-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+
+    .category-info-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .category-info-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-primary);
+    }
+
+    .category-info-card h3 i {
+      color: var(--accent-blue);
+    }
+
+    .category-info-item {
+      margin-bottom: 12px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 10px;
+    }
+
+    .category-info-item-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .category-info-item-content {
+      font-size: 14px;
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    /* 词汇表表格样式 */
+    .vocab-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .vocab-table-header {
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr 1.2fr 1.2fr;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--bg-secondary);
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .vocab-table-row {
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr 1.2fr 1.2fr;
+      gap: 8px;
+      padding: 8px 14px;
+      border-top: 1px solid var(--border-color);
+      align-items: center;
+      transition: background 0.2s;
+    }
+
+    .vocab-table-row:hover {
+      background: rgba(59, 130, 246, 0.03);
+    }
+
+    .vocab-table-row:nth-child(even) {
+      background: var(--accent-bg);
+    }
+
+    .vocab-table-row:nth-child(even):hover {
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .vocab-col-word {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .vocab-col-phonetic {
+      color: var(--text-secondary);
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      font-size: 13px;
+    }
+
+    .vocab-col-vowel {
+      color: #e74c3c;
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+
+    .vocab-col-meaning {
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .vocab-search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+
+    .vocab-search-bar input {
+      flex: 1;
+      padding: 10px 16px;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    .vocab-search-bar input:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .vocab-search-bar select {
+      padding: 10px 14px;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 13px;
+      outline: none;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .vocab-count-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-blue);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .category-video-section {
+      margin-bottom: 30px;
+    }
+
+    .category-video-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .category-video-section-header h2 {
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .category-video-section-header span {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .level-lesson-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .level-lesson-item {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow-md);
+      transition: all 0.3s;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .level-lesson-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .level-lesson-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .level-lesson-info {
+      flex: 1;
+    }
+
+    .level-lesson-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .level-lesson-meta {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .level-lesson-action {
+      padding: 10px 20px;
+      background: var(--accent-blue);
+      color: white;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .level-lesson-action:hover {
+      background: var(--accent-blue-dark);
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+      .category-detail-content {
+        grid-template-columns: 1fr;
+      }
+      
+      .category-detail-stats {
+        gap: 20px;
+      }
+      
+      .category-detail-title {
+        font-size: 24px;
+      }
+      
+      .level-lesson-item {
+        flex-wrap: wrap;
+      }
+      
+      .level-lesson-action {
+        width: 100%;
+        text-align: center;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) { 
+      .navbar-links { display: none; }
+      .header { padding: 40px 0 30px; } 
+      .categories { grid-template-columns: 1fr; } 
+      .video-grid { grid-template-columns: 1fr; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .level-filter-buttons { flex-wrap: wrap; overflow-x: auto; }
+      .level-filter-btn { flex-shrink: 0; }
+      .category-detail-view { padding-top: 70px; }
+      .category-detail-header { padding: 30px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" id="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-brand">
+        <svg class="brand-logo" style="flex-shrink:0; filter:drop-shadow(0 2px 6px rgba(59,130,246,0.3));" viewBox="0 0 36 36" width="28" height="28" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lv-grad" x1="0" y1="0" x2="36" y2="36"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs><path d="M3 7a3 3 0 0 1 3-3h24a3 3 0 0 1 3 3v16a3 3 0 0 1-3 3H17l-7 5v-5H6a3 3 0 0 1-3-3V7z" fill="url(#lv-grad)"/><rect x="11" y="12" width="3" height="11" rx="1.2" fill="white"/><rect x="11" y="19.5" width="9" height="3" rx="1.2" fill="white"/><circle cx="24" cy="13" r="2.2" fill="white"/></svg>LinguaView
+      </a>
+      <ul class="navbar-links">
+        <li><a href="index.html">首页</a></li>
+        <li><a href="catalog.html" class="active">学习目录</a></li>
+        <li><a href="learn.html">精听练习</a></li>
+        <li><a href="使用指南.html">使用指南</a></li>
+      </ul>
+      <button class="theme-toggle" onclick="toggleTheme()" title="切换深色模式">
+        <i class="fa-solid fa-moon"></i>
+        <i class="fa-solid fa-sun"></i>
+      </button>
+      <button class="hamburger" onclick="toggleMobileMenu()" title="菜单">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html">首页</a>
+    <a href="catalog.html" class="active">学习目录</a>
+    <a href="learn.html">精听练习</a>
+    <a href="使用指南.html">使用指南</a>
+  </div>
+
+  <div class="container">
+    <!-- 默认视图：分类列表和全部视频 -->
+    <div id="defaultView">
+    <header class="header">
+      <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i>返回首页</a>
+      <h1>学习目录</h1>
+      <p>选择你的学习方向，开始英语之旅</p>
+    </header>
+
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-card-value" id="statLevels">—</div>
+        <div class="stat-card-label">学习等级</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-value" id="statVocab">—</div>
+        <div class="stat-card-label">已收录词汇</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-value" id="statVideos">—</div>
+        <div class="stat-card-label">示例课程</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-value">7</div>
+        <div class="stat-card-label">练习模式</div>
+      </div>
+    </div>
+
+    <div class="level-filter">
+      <div class="level-filter-title">
+        <i class="fa-solid fa-bullseye"></i>
+        <span>按学习目标找推荐起点</span>
+        <span style="font-size: 12px; color: var(--text-secondary); font-weight: normal;">（仅为推荐起点，非官方等级换算）</span>
+      </div>
+      <div class="level-filter-buttons" id="goalFilterButtons">
+        <button class="level-filter-btn" data-goal="零基础" onclick="filterByGoal('零基础')">
+          <i class="fa-solid fa-seedling"></i><span>零基础</span><span class="vocab-count">推荐 A1</span>
+        </button>
+        <button class="level-filter-btn" data-goal="初高中" onclick="filterByGoal('初高中')">
+          <i class="fa-solid fa-school"></i><span>初高中</span><span class="vocab-count">推荐 A2</span>
+        </button>
+        <button class="level-filter-btn" data-goal="四六级" onclick="filterByGoal('四六级')">
+          <i class="fa-solid fa-book"></i><span>四六级</span><span class="vocab-count">推荐 B1</span>
+        </button>
+        <button class="level-filter-btn" data-goal="考研" onclick="filterByGoal('考研')">
+          <i class="fa-solid fa-graduation-cap"></i><span>考研</span><span class="vocab-count">推荐 B2</span>
+        </button>
+        <button class="level-filter-btn" data-goal="雅思托福" onclick="filterByGoal('雅思托福')">
+          <i class="fa-solid fa-plane-departure"></i><span>雅思 / 托福</span><span class="vocab-count">推荐 B2</span>
+        </button>
+        <button class="level-filter-btn" data-goal="职场" onclick="filterByGoal('职场')">
+          <i class="fa-solid fa-briefcase"></i><span>职场商务</span><span class="vocab-count">推荐 B1</span>
+        </button>
+      </div>
+      <p style="font-size: 12px; color: var(--text-secondary); margin-top: 12px; line-height: 1.7;">
+        <i class="fa-solid fa-circle-info"></i>
+        以上为按常见学习目标给出的<strong>推荐起点</strong>，<strong>并非官方考试等级换算</strong>。CEFR 等级只表示本站内容的难度参考，不代表你的考试成绩或实际水平。
+      </p>
+    </div>
+
+    <div class="level-filter">
+      <div class="level-filter-title">
+        <i class="fa-solid fa-layer-group"></i>
+        <span>按 CEFR 等级筛选</span>
+        <span style="font-size: 12px; color: var(--text-secondary); font-weight: normal;">（国际通用分级，选择适合你水平的内容）</span>
+      </div>
+      <div class="level-filter-buttons" id="levelFilterButtons">
+      </div>
+    </div>
+
+    <section class="categories">
+      <div class="category-card" onclick="navigateToCategory('等级学习')"><div class="category-icon" style="background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%); color: white;"><i class="fa-solid fa-layer-group"></i></div><h3 class="category-title">等级学习</h3><div class="category-count">5个等级体系</div><p class="category-desc">从零基础到高级，按 CEFR 等级循序渐进学习</p></div>
+      <div class="category-card" onclick="navigateToCategory('学习精选')"><div class="category-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;"><i class="fa-solid fa-star"></i></div><h3 class="category-title">学习精选</h3><div class="category-count">精选优质内容</div><p class="category-desc">精心挑选的英语学习视频，涵盖各种场景和主题</p></div>
+      <div class="category-card" onclick="navigateToCategory('日常口语')"><div class="category-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;"><i class="fa-solid fa-comments"></i></div><h3 class="category-title">日常口语</h3><div class="category-count">实用生活场景</div><p class="category-desc">掌握日常交流必备的英语口语表达</p></div>
+      <div class="category-card" onclick="navigateToCategory('商务英语')"><div class="category-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white;"><i class="fa-solid fa-briefcase"></i></div><h3 class="category-title">商务英语</h3><div class="category-count">职场沟通技巧</div><p class="category-desc">提升职场英语能力，助力职业发展</p></div>
+      <div class="category-card" onclick="navigateToCategory('旅游英语')"><div class="category-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;"><i class="fa-solid fa-plane"></i></div><h3 class="category-title">旅游英语</h3><div class="category-count">出行必备表达</div><p class="category-desc">轻松应对出国旅行的各种场景</p></div>
+      <div class="category-card" onclick="navigateToCategory('新闻英语')"><div class="category-icon" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white;"><i class="fa-solid fa-newspaper"></i></div><h3 class="category-title">新闻英语</h3><div class="category-count">时事热点内容</div><p class="category-desc">通过新闻学习地道的英语表达</p></div>
+      <div class="category-card" onclick="navigateToCategory('影视英语')"><div class="category-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;"><i class="fa-solid fa-film"></i></div><h3 class="category-title">影视英语</h3><div class="category-count">经典台词学习</div><p class="category-desc">从电影电视剧中学习英语表达</p></div>
+      <div class="category-card" onclick="window.location.href='vlog.html'"><div class="category-icon" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); color: white;"><i class="fa-solid fa-video"></i></div><h3 class="category-title">Vlog 短视频</h3><div class="category-count">上下滑动短视频</div><p class="category-desc">以短视频形式看日常生活英语，适合碎片时间泛听</p></div>
+    </section>
+
+    <section>
+      <div class="section-header">
+        <h2 class="section-title">示例课程</h2>
+        <p class="section-subtitle">以下为带双语字幕的示例课程，用于演示学习流程；正式课程陆续上线</p>
+      </div>
+      <div class="video-grid" id="videoGrid"></div>
+    </section>
+    </div>
+
+    <!-- 分类详情视图 -->
+    <div id="categoryDetailView" class="category-detail-view"></div>
+  </div>
+
+  <footer class="footer">
+    <p><span style="font-weight: 600; color: var(--text-primary);">LinguaView</span> · 英语视频精听学习工具</p>
+    <p style="margin-top: 10px; font-size: 13px;" class="footer-links">
+      <a href="使用指南.html">使用指南</a> ·
+      <a href="声明.html">来源与版权</a> ·
+      <a href="声明.html#privacy">隐私说明</a> ·
+      <a href="admin.html" style="color: var(--text-muted);">管理员入口</a>
+    </p>
+  </footer>
+
+  <script src="js/vocab_a1.js"></script>
+  <script src="js/vocab_a2.js"></script>
+  <script src="js/vocab_b1.js"></script>
+  <script src="js/vocab_b2.js"></script>
+  <script src="js/vocab_c1.js"></script>
+  <script src="js/levels.js"></script>
+  <script>
+    let currentLevelFilter = 'all';
+    let currentCategoryFilter = '全部';
+
+    // 分类数据
+    const categoryData = {
+      '等级学习': {
+        title: '等级学习',
+        icon: 'fa-layer-group',
+        gradient: 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)',
+        color: '#a855f7',
+        desc: '从零基础到高级，按 CEFR 等级循序渐进学习英语。每个等级都写明适合的基础、学习目标与推荐资源。',
+        stats: [
+          { value: '5', label: '等级体系' },
+          { value: '规划中', label: '核心词汇' },
+          { value: '规划中', label: '学习视频' }
+        ],
+        infoCards: [
+          { title: '学习目标', icon: 'fa-bullseye', items: [
+            { title: '入门基础', content: '掌握日常用语，进行简单交流' },
+            { title: '进阶应用', content: '流利表达经历、梦想与计划' },
+            { title: '高级理解与表达', content: '在学术、职场等复杂场景中准确理解与表达' }
+          ]},
+          { title: '学习资源', icon: 'fa-book', items: [
+            { title: '推荐APP', content: '多邻国、Memrise、英语流利说' },
+            { title: '推荐教材', content: '《新概念英语》、English Grammar in Use' },
+            { title: '推荐网站', content: 'VOA Learning English、BBC 6 Minute English' }
+          ]}
+        ],
+        getVideoList: () => {
+          const levels = window.learningLevels || [];
+          return levels.map(level => ({
+            id: level.id,
+            title: `${level.name} (${level.level})`,
+            meta: `${level.vocabulary.count}词汇 · 难度${level.difficulty}/5`,
+            gradient: level.gradient,
+            icon: level.icon,
+            action: { text: '查看详情', href: `#level-${level.id}` }
+          }));
+        }
+      },
+      '学习精选': {
+        title: '学习精选',
+        icon: 'fa-star',
+        gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+        color: '#f59e0b',
+        desc: '精心挑选的英语学习视频，涵盖各种场景和主题，适合各水平的学习者。',
+        stats: [
+          { value: '规划中', label: '精选视频' },
+          { value: '规划中', label: '学习主题' },
+          { value: '100%', label: '双语字幕' }
+        ],
+        infoCards: [
+          { title: '学习特色', icon: 'fa-feather', items: [
+            { title: '精选内容', content: '专业团队筛选高质量学习材料' },
+            { title: '场景丰富', content: '涵盖日常、商务、旅游等多种场景' },
+            { title: '难度分级', content: '从入门到高级，循序渐进' }
+          ]},
+          { title: '学习建议', icon: 'fa-lightbulb', items: [
+            { title: '每日学习', content: '建议每天至少学习15-30分钟' },
+            { title: '跟读练习', content: '反复跟读模仿，提升口语语感' },
+            { title: '记笔记', content: '记录生词和地道表达，定期复习' }
+          ]}
+        ],
+        getVideoList: () => []
+      },
+      '日常口语': {
+        title: '日常口语',
+        icon: 'fa-comments',
+        gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        color: '#10b981',
+        desc: '掌握日常交流必备的英语口语表达，涵盖问候、购物、天气、爱好等常见话题。',
+        stats: [
+          { value: '规划中', label: '实用表达' },
+          { value: '规划中', label: '生活场景' },
+          { value: 'A2-B1', label: '适合水平' }
+        ],
+        infoCards: [
+          { title: '学习内容', icon: 'fa-list-check', items: [
+            { title: '基础对话', content: '问候、自我介绍、简单问答' },
+            { title: '日常场景', content: '购物、餐厅、银行、邮局' },
+            { title: '情感表达', content: '喜好、情绪、建议、请求' }
+          ]},
+          { title: '学习方法', icon: 'fa-graduation-cap', items: [
+            { title: '影子跟读法', content: '跟读短对话，模仿语音语调' },
+            { title: '三句日记', content: '用英语记三句话，练习时态' },
+            { title: '语伴对话', content: '围绕固定话题反复练习' }
+          ]}
+        ],
+        getVideoList: () => []
+      },
+      '商务英语': {
+        title: '商务英语',
+        icon: 'fa-briefcase',
+        gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+        color: '#3b82f6',
+        desc: '提升职场英语能力，涵盖商务谈判、邮件撰写、会议沟通等核心技能。',
+        stats: [
+          { value: '规划中', label: '商务词汇' },
+          { value: '规划中', label: '职场场景' },
+          { value: 'B1-B2', label: '适合水平' }
+        ],
+        infoCards: [
+          { title: '学习内容', icon: 'fa-building', items: [
+            { title: '商务谈判', content: '报价、议价、合同条款' },
+            { title: '邮件沟通', content: '商务邮件撰写与回复' },
+            { title: '会议英语', content: '主持会议、讨论议题' }
+          ]},
+          { title: '学习资源', icon: 'fa-book-open', items: [
+            { title: '推荐教材', content: '《商务英语》系列、Cambridge English for Business' },
+            { title: '推荐网站', content: 'Business English Site、BBC Business' },
+            { title: '实践建议', content: '尝试用英语写工作邮件和报告' }
+          ]}
+        ],
+        getVideoList: () => []
+      },
+      '旅游英语': {
+        title: '旅游英语',
+        icon: 'fa-plane',
+        gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+        color: '#ef4444',
+        desc: '轻松应对出国旅行的各种场景，从机场办理到酒店入住，从问路到购物，全面覆盖。',
+        stats: [
+          { value: '规划中', label: '旅行表达' },
+          { value: '规划中', label: '旅行场景' },
+          { value: 'A2-B1', label: '适合水平' }
+        ],
+        infoCards: [
+          { title: '学习内容', icon: 'fa-plane-departure', items: [
+            { title: '机场英语', content: '值机、安检、登机、转机' },
+            { title: '酒店英语', content: '预订、入住、退房、服务请求' },
+            { title: '旅行交流', content: '问路、购物、餐厅、应急' }
+          ]},
+          { title: '实用技巧', icon: 'fa-tips', items: [
+            { title: '常用句型', content: '记忆高频使用的句型和表达' },
+            { title: '情景模拟', content: '模拟旅行场景进行角色扮演' },
+            { title: '随身卡片', content: '制作旅行常用句卡片随身携带' }
+          ]}
+        ],
+        getVideoList: () => []
+      },
+      '新闻英语': {
+        title: '新闻英语',
+        icon: 'fa-newspaper',
+        gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+        color: '#06b6d4',
+        desc: '通过新闻学习地道的英语表达，了解时事热点，同时提升听力和阅读能力。',
+        stats: [
+          { value: '规划中', label: '新闻词汇' },
+          { value: '规划中', label: '新闻主题' },
+          { value: 'B1-B2', label: '适合水平' }
+        ],
+        infoCards: [
+          { title: '学习内容', icon: 'fa-newspaper', items: [
+            { title: '时事新闻', content: '政治、经济、科技、社会新闻' },
+            { title: '新闻词汇', content: '新闻常用词汇和表达' },
+            { title: '听力训练', content: '精听和泛听结合训练' }
+          ]},
+          { title: '推荐资源', icon: 'fa-tv', items: [
+            { title: 'VOA慢速英语', content: '适合B1水平的慢速新闻' },
+            { title: 'BBC 6 Minute English', content: '6分钟短新闻听力' },
+            { title: 'CNN 10', content: '10分钟青少年新闻节目' }
+          ]}
+        ],
+        getVideoList: () => []
+      },
+      '影视英语': {
+        title: '影视英语',
+        icon: 'fa-film',
+        gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+        color: '#8b5cf6',
+        desc: '从电影电视剧中学习地道的英语表达，感受语言在真实语境中的运用。',
+        stats: [
+          { value: '规划中', label: '经典台词' },
+          { value: '规划中', label: '影视作品' },
+          { value: 'B1-C1', label: '适合水平' }
+        ],
+        infoCards: [
+          { title: '学习内容', icon: 'fa-clapperboard', items: [
+            { title: '经典台词', content: '模仿和学习影视经典台词' },
+            { title: '地道表达', content: '学习俚语、习语和口语表达' },
+            { title: '文化背景', content: '了解英语国家文化和习俗' }
+          ]},
+          { title: '学习方法', icon: 'fa-graduation-cap', items: [
+            { title: '第一遍', content: '理解剧情，不查词' },
+            { title: '第二遍', content: '精听记录地道表达' },
+            { title: '第三遍', content: '跟读模仿，录音对比' }
+          ]}
+        ],
+        getVideoList: () => []
+      }
+    };
+
+    function updateStats() {
+      const levels = window.learningLevels || [];
+      const totalWords = levels.reduce((sum, l) => sum + (l.vocabulary.wordList ? l.vocabulary.wordList.length : 0), 0);
+      // 只统计真正带字幕、可进入学习的示例课程，避免虚报数量
+      const totalCourses = levels.reduce((sum, l) =>
+        sum + (l.sampleVideos || []).filter(v => (v.subtitles || []).length > 0).length, 0);
+      document.getElementById('statLevels').textContent = levels.length;
+      document.getElementById('statVocab').textContent = totalWords + ' 词';
+      document.getElementById('statVideos').textContent = totalCourses + ' 节';
+    }
+
+    function renderLevelFilter() {
+      const container = document.getElementById('levelFilterButtons');
+      const levels = window.learningLevels || [];
+      const allBtn = `
+        <button class="level-filter-btn active" data-level="all" onclick="filterByLevel('all')">
+          <i class="fa-solid fa-globe"></i>
+          <span>全部等级</span>
+        </button>
+      `;
+      const levelsHtml = levels.map(level => {
+        const stars = '★'.repeat(level.difficulty) + '☆'.repeat(5 - level.difficulty);
+        return `
+        <button class="level-filter-btn" data-level="${level.id}" onclick="filterByLevel('${level.id}')">
+          <i class="fa-solid ${level.icon}"></i>
+          <div style="display: flex; flex-direction: column; align-items: flex-start;">
+            <span>${level.name}</span>
+            <span style="font-size: 10px; opacity: 0.7; letter-spacing: 1px;">${stars}</span>
+          </div>
+          <span class="vocab-count">${level.vocabulary.count}词</span>
+        </button>
+      `;
+      }).join('');
+      container.innerHTML = allBtn + levelsHtml;
+      updateStats();
+    }
+
+    // 目标 → CEFR 等级映射（国内常见学习目标）
+    const GOAL_TO_LEVEL = {
+      '零基础': 'a1',
+      '初高中': 'a2',
+      '四六级': 'b1',
+      '考研': 'b2',
+      '雅思托福': 'b2',
+      '职场': 'b1'
+    };
+
+    function filterByGoal(goal) {
+      const levelId = GOAL_TO_LEVEL[goal];
+      if (!levelId) return;
+      document.querySelectorAll('#goalFilterButtons .level-filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.goal === goal);
+      });
+      filterByLevel(levelId, true);
+      const level = window.getLevelById(levelId);
+      if (level) showToast(`目标「${goal}」→ 推荐从「${level.name}」（${level.level}）开始`, 'info');
+    }
+
+    function filterByLevel(levelId, silent) {
+      currentLevelFilter = levelId;
+      document.querySelectorAll('#levelFilterButtons .level-filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.level === levelId);
+      });
+      updateVideoGrid();
+      if (silent) return;
+      const level = levelId === 'all' ? null : window.getLevelById(levelId);
+      showToast(level ? `已筛选「${level.name}」等级` : '显示全部等级内容', 'info');
+    }
+
+    function getLevelVideos() {
+      if (currentLevelFilter === 'all') {
+        return window.learningLevels.flatMap(level => level.sampleVideos.map(v => ({...v, levelId: level.id, levelName: level.name, levelColor: level.color, levelDifficulty: level.difficulty})));
+      }
+      const level = window.getLevelById(currentLevelFilter);
+      return level ? level.sampleVideos.map(v => ({...v, levelId: level.id, levelName: level.name, levelColor: level.color, levelDifficulty: level.difficulty})) : [];
+    }
+
+    // 课程是否有可播放的视频源：有 → 「含视频」；没有 → 只有字幕 → 「字幕练习」
+    function courseHasVideo(course) {
+      return !!(course && (course.videoUrl || course.sourceId));
+    }
+
+    function updateVideoGrid() {
+      const grid = document.getElementById('videoGrid');
+      let allVideos = [];
+
+      if (currentLevelFilter !== 'all') {
+        allVideos = getLevelVideos();
+      } else {
+        // 只纳入确实有视频源的本机课程，避免出现空地址课程
+        let storedVideos = [];
+        try {
+          storedVideos = JSON.parse(localStorage.getItem('linguaview_videos') || '[]')
+            .filter(v => v && v.title && (v.videoUrl || v.sourceId));
+        } catch (e) { storedVideos = []; }
+        const levelVideos = window.learningLevels.flatMap(level => 
+          level.sampleVideos.map(v => ({...v, category: '等级学习', levelId: level.id, levelName: level.name, levelColor: level.color, levelDifficulty: level.difficulty}))
+        );
+        allVideos = [...storedVideos, ...levelVideos];
+      }
+
+      let filtered = allVideos;
+      if (currentCategoryFilter !== '全部' && currentCategoryFilter !== '等级学习') {
+        filtered = filtered.filter(v => v.category === currentCategoryFilter);
+      } else if (currentCategoryFilter === '等级学习' && currentLevelFilter === 'all') {
+        filtered = filtered.filter(v => v.category === '等级学习');
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text-secondary);"><i class="fa-solid fa-inbox" style="font-size: 48px; margin-bottom: 16px;"></i><p>暂无该等级的学习视频</p></div>`;
+        return;
+      }
+
+      const levelInfoBanner = currentLevelFilter !== 'all' ? (() => {
+        const level = window.getLevelById(currentLevelFilter);
+        if (!level) return '';
+        const stars = '★'.repeat(level.difficulty) + '☆'.repeat(5 - level.difficulty);
+        return `
+          <div style="grid-column: 1/-1; padding: 16px 20px; background: ${level.gradient}; border-radius: 14px; color: white; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <div style="font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid ${level.icon}"></i> ${level.name} (${level.level})
+              </div>
+              <div style="font-size: 13px; opacity: 0.9; margin-top: 4px;">${level.goal.substring(0, 50)}...</div>
+            </div>
+            <div style="display: flex; gap: 20px; align-items: center;">
+              <div style="text-align: center;">
+                <div style="font-size: 20px; font-weight: 700;">${level.vocabulary.count}</div>
+                <div style="font-size: 11px; opacity: 0.8;">核心词汇</div>
+              </div>
+              <div style="text-align: center;">
+                <div style="font-size: 20px; font-weight: 700;">${level.sampleVideos.length}</div>
+                <div style="font-size: 11px; opacity: 0.8;">视频课程</div>
+              </div>
+              <div style="text-align: center;">
+                <div style="font-size: 16px; letter-spacing: 2px;">${stars}</div>
+                <div style="font-size: 11px; opacity: 0.8;">难度 ${level.difficulty}/5</div>
+              </div>
+            </div>
+          </div>
+        `;
+      })() : '';
+
+      grid.innerHTML = levelInfoBanner + filtered.map(video => {
+        const level = video.levelId ? window.getLevelById(video.levelId) : null;
+        const hasSubtitles = video.subtitles && video.subtitles.length > 0;
+        const hasVideo = courseHasVideo(video);
+        const levelTag = level ? `<span class="video-tag" style="background: ${level.color}20; color: ${level.color};">${level.name}</span>` : '';
+        const statusBadge = hasVideo
+          ? `<span class="course-status" style="background: #10b981; color: #fff;"><i class="fa-solid fa-video"></i> 含视频</span>`
+          : `<span class="course-status" style="background: #f59e0b; color: #fff;"><i class="fa-solid fa-closed-captioning"></i> 字幕练习</span>`;
+        const subtitleInfo = hasSubtitles ? `<span style="font-size: 11px; color: var(--accent-blue); background: rgba(59,130,246,0.1); padding: 2px 6px; border-radius: 6px;"><i class="fa-solid fa-closed-captioning"></i> ${video.subtitles.length}句</span>` : '';
+        return `
+          <div class="video-card">
+            <div class="video-thumbnail" onclick="goToLearnFromCatalog('${video.id}', '${video.levelId || ''}')">
+              <div class="play-icon"><i class="fa-solid fa-${hasVideo ? 'play' : 'pen-to-square'}"></i></div>
+              ${statusBadge}
+              ${subtitleInfo ? `<div style="position: absolute; bottom: 10px; right: 10px;">${subtitleInfo}</div>` : ''}
+            </div>
+            <div class="video-info">
+              <div class="video-title">${video.title}</div>
+              <div class="video-meta">
+                <span><i class="fa-solid fa-clock"></i>${video.duration || '—'}</span>
+                ${video.difficulty ? `<span style="color: var(--accent-blue);"><i class="fa-solid fa-signal"></i>${video.difficulty}</span>` : ''}
+                ${hasSubtitles ? `<span style="color: #10b981;"><i class="fa-solid fa-check-circle"></i>${hasVideo ? '视频+字幕' : '仅字幕'}</span>` : ''}
+              </div>
+              <div class="video-tags">
+                ${levelTag}
+                ${(video.tags || []).map(tag => `<span class="video-tag">${tag}</span>`).join('')}
+              </div>
+              <div class="video-action">
+                <a href="learn.html?videoId=${video.id}${video.levelId ? '&levelId=' + video.levelId : ''}" class="btn">
+                  <i class="fa-solid fa-${hasVideo ? 'play' : 'pen-to-square'}"></i>${hasVideo ? '看视频学' : '练字幕'}
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function goToLearnFromCatalog(videoId, levelId) {
+      const url = `learn.html?videoId=${videoId}${levelId ? '&levelId=' + levelId : ''}`;
+      window.location.href = url;
+    }
+
+    // 导航到分类详情
+    function navigateToCategory(categoryName) {
+      if (categoryData[categoryName]) {
+        window.location.hash = `#category-${encodeURIComponent(categoryName)}`;
+        renderCategoryDetail(categoryName);
+      }
+    }
+
+    // 返回分类列表
+    function goBackToCategories() {
+      window.location.hash = '';
+      document.getElementById('categoryDetailView').classList.remove('active');
+      document.getElementById('defaultView').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 渲染分类详情
+    function renderCategoryDetail(categoryName) {
+      const data = categoryData[categoryName];
+      if (!data) return;
+
+      const view = document.getElementById('categoryDetailView');
+      const defaultView = document.getElementById('defaultView');
+      
+      defaultView.style.display = 'none';
+      view.classList.add('active');
+
+      const videoList = data.getVideoList ? data.getVideoList() : [];
+
+      view.innerHTML = `
+        <div class="category-detail-header" style="background: ${data.gradient};">
+          <button class="category-detail-back" onclick="goBackToCategories()">
+            <i class="fa-solid fa-arrow-left"></i> 返回分类列表
+          </button>
+          <div class="category-detail-title">
+            <i class="fa-solid ${data.icon}"></i>
+            ${data.title}
+          </div>
+          <div class="category-detail-desc">${data.desc}</div>
+          <div class="category-detail-stats">
+            ${data.stats.map(stat => `
+              <div class="category-detail-stat">
+                <div class="category-detail-stat-value">${stat.value}</div>
+                <div class="category-detail-stat-label">${stat.label}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="category-detail-content">
+          ${data.infoCards.map(card => `
+            <div class="category-info-card">
+              <h3><i class="fa-solid ${card.icon}"></i>${card.title}</h3>
+              ${card.items.map(item => `
+                <div class="category-info-item">
+                  <div class="category-info-item-title">${item.title}</div>
+                  <div class="category-info-item-content">${item.content}</div>
+                </div>
+              `).join('')}
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="category-video-section">
+          <div class="category-video-section-header">
+            <h2><i class="fa-solid fa-play-circle" style="color: ${data.color}; margin-right: 8px;"></i>推荐学习内容</h2>
+            <span>${videoList.length > 0 ? `共 ${videoList.length} 项` : '课程准备中'}</span>
+          </div>
+          <div class="level-lesson-list">
+            ${videoList.length === 0 ? `
+              <div class="empty-hint" style="padding: 40px 20px;">
+                <i class="fa-regular fa-folder-open"></i>
+                <p>该分类的正式课程正在准备中，暂无可学习的视频。<br>
+                你可以先按 <a href="catalog.html#levels" style="color: var(--accent-blue);">CEFR 等级</a> 或上方学习目标选择已有示例课程。</p>
+              </div>
+            ` : videoList.map(video => {
+              const isLevelLink = video.action.href.startsWith('#level-');
+              const levelId = isLevelLink ? video.action.href.replace('#level-', '') : '';
+              const clickHandler = isLevelLink
+                ? `event.preventDefault(); event.stopPropagation(); renderLevelDetail('${levelId}');`
+                : `event.stopPropagation();`;
+              return `
+              <div class="level-lesson-item" onclick="${clickHandler}">
+                <div class="level-lesson-icon" style="background: ${video.gradient};">
+                  <i class="fa-solid ${video.icon}"></i>
+                </div>
+                <div class="level-lesson-info">
+                  <div class="level-lesson-title">${video.title}</div>
+                  <div class="level-lesson-meta">${video.meta}</div>
+                </div>
+                <a href="${video.action.href}" class="level-lesson-action" onclick="${clickHandler}">
+                  <i class="fa-solid ${data.icon}"></i> ${video.action.text}
+                </a>
+              </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 从音标中提取元音音标
+    function extractVowels(phonetic) {
+      if (!phonetic) return '';
+      const vowelPattern = /iː|ɪ|e|æ|ʌ|ɜː|ə|uː|ʊ|ɔː|ɒ|ɑː|eɪ|aɪ|ɔɪ|aʊ|əʊ|ɪə|eə|ʊə/g;
+      const matches = phonetic.match(vowelPattern);
+      if (!matches || matches.length === 0) return '-';
+      return [...new Set(matches)].join(', ');
+    }
+
+    // 生成词汇表行HTML
+    function vocabTableRowHTML(w, color) {
+      const vowel = w.vowel || extractVowels(w.phonetic);
+      return `
+        <div class="vocab-table-row">
+          <span class="vocab-col-word" style="color: ${color};">${w.word}</span>
+          <span class="vocab-col-phonetic">${w.phonetic || '-'}</span>
+          <span class="vocab-col-vowel">${vowel}</span>
+          <span class="vocab-col-meaning">${w.meaning}</span>
+        </div>
+      `;
+    }
+
+    // 展开/收起全部词汇
+    function toggleAllVocab(levelId, totalWords) {
+      const container = document.getElementById('allVocabContainer');
+      const btn = document.getElementById('showAllVocabBtn');
+      if (container.style.display === 'none') {
+        container.style.display = 'block';
+        btn.innerHTML = `<i class="fa-solid fa-chevron-up"></i> 收起词汇`;
+      } else {
+        container.style.display = 'none';
+        btn.innerHTML = `<i class="fa-solid fa-chevron-down"></i> 显示全部 ${totalWords} 个词汇`;
+      }
+    }
+
+    // 等级详情视图
+    function renderLevelDetail(levelId) {
+      const level = window.getLevelById(levelId);
+      if (!level) return;
+
+      const view = document.getElementById('categoryDetailView');
+      const defaultView = document.getElementById('defaultView');
+      
+      defaultView.style.display = 'none';
+      view.classList.add('active');
+
+      const stars = '★'.repeat(level.difficulty) + '☆'.repeat(5 - level.difficulty);
+      const wordList = level.vocabulary.wordList || [];
+      const previewWords = wordList.slice(0, 50);
+      const totalWords = wordList.length;
+
+      view.innerHTML = `
+        <div class="category-detail-header" style="background: ${level.gradient};">
+          <button class="category-detail-back" onclick="goBackToCategories()">
+            <i class="fa-solid fa-arrow-left"></i> 返回分类列表
+          </button>
+          <div class="category-detail-title">
+            <i class="fa-solid ${level.icon}"></i>
+            ${level.name} (${level.level})
+          </div>
+          <div class="category-detail-desc">${level.goal}</div>
+          <div class="category-detail-stats">
+            <div class="category-detail-stat">
+              <div class="category-detail-stat-value">${level.vocabulary.count}</div>
+              <div class="category-detail-stat-label">核心词汇</div>
+            </div>
+            <div class="category-detail-stat">
+              <div class="category-detail-stat-value">${totalWords}</div>
+              <div class="category-detail-stat-label">已收录词汇</div>
+            </div>
+            <div class="category-detail-stat">
+              <div class="category-detail-stat-value">${level.sampleVideos.length}</div>
+              <div class="category-detail-stat-label">视频课程</div>
+            </div>
+            <div class="category-detail-stat">
+              <div class="category-detail-stat-value">${stars}</div>
+              <div class="category-detail-stat-label">难度 ${level.difficulty}/5</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="category-detail-content">
+          <div class="category-info-card">
+            <h3><i class="fa-solid fa-book-open"></i>学习内容</h3>
+            <div class="category-info-item">
+              <div class="category-info-item-title"><i class="fa-solid fa-volume-high"></i> 语音基础</div>
+              <div class="category-info-item-content">${level.content.phonetics}</div>
+            </div>
+            <div class="category-info-item">
+              <div class="category-info-item-title"><i class="fa-solid fa-list-check"></i> 词汇学习</div>
+              <div class="category-info-item-content">${level.content.vocabulary}</div>
+            </div>
+            <div class="category-info-item">
+              <div class="category-info-item-title"><i class="fa-solid fa-code"></i> 语法重点</div>
+              <div class="category-info-item-content">${level.content.grammar}</div>
+            </div>
+            <div class="category-info-item">
+              <div class="category-info-item-title"><i class="fa-solid fa-user-graduate"></i> 技能目标</div>
+              <div class="category-info-item-content">${level.content.skills}</div>
+            </div>
+          </div>
+
+          <div class="category-info-card">
+            <h3><i class="fa-solid fa-tools"></i>学习方法与资源</h3>
+            <div class="category-info-item">
+              <div class="category-info-item-title"><i class="fa-solid fa-lightbulb"></i> 学习理念</div>
+              <div class="category-info-item-content">${level.method.description}</div>
+            </div>
+            <div class="category-info-item">
+              <div class="category-info-item-title"><i class="fa-solid fa-list-ol"></i> 具体做法</div>
+              <div class="category-info-item-content">${level.method.steps.join('；')}</div>
+            </div>
+            <div class="category-info-item">
+              <div class="category-info-item-title"><i class="fa-solid fa-star"></i> 推荐资源</div>
+              <div class="category-info-item-content">${level.method.resources.join('、')}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="category-detail-content">
+          <div class="category-info-card" style="grid-column: 1/-1;">
+            <h3><i class="fa-solid fa-bookmark"></i>核心词汇表 (共${totalWords}词，显示前${previewWords.length}个)
+              <span class="vocab-count-badge" style="margin-left: 10px;">
+                <i class="fa-solid fa-language"></i> 红色=元音音标
+              </span>
+            </h3>
+            <div class="vocab-table">
+              <div class="vocab-table-header">
+                <span class="vocab-col-word">单词</span>
+                <span class="vocab-col-phonetic">音标</span>
+                <span class="vocab-col-vowel">元音音标</span>
+                <span class="vocab-col-meaning">释义</span>
+              </div>
+              ${previewWords.map(w => vocabTableRowHTML(w, level.color)).join('')}
+            </div>
+            ${totalWords > 50 ? `
+              <div style="margin-top: 16px; text-align: center;">
+                <button id="showAllVocabBtn" onclick="toggleAllVocab('${levelId}', ${totalWords})" style="padding: 10px 24px; background: ${level.gradient}; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 14px; transition: all 0.3s;">
+                  <i class="fa-solid fa-chevron-down"></i> 显示全部 ${totalWords} 个词汇
+                </button>
+              </div>
+              <div id="allVocabContainer" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                <div class="vocab-table">
+                  <div class="vocab-table-header">
+                    <span class="vocab-col-word">单词</span>
+                    <span class="vocab-col-phonetic">音标</span>
+                    <span class="vocab-col-vowel">元音音标</span>
+                    <span class="vocab-col-meaning">释义</span>
+                  </div>
+                  ${wordList.map(w => vocabTableRowHTML(w, level.color)).join('')}
+                </div>
+              </div>
+            ` : ''}
+            <div style="margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px;">
+              ${level.vocabulary.topics.map(topic => `
+                <span style="padding: 4px 10px; background: ${level.color}15; color: ${level.color}; border-radius: 6px; font-size: 12px;">#${topic}</span>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="category-video-section">
+          <div class="category-video-section-header">
+            <h2><i class="fa-solid fa-play-circle" style="color: ${level.color}; margin-right: 8px;"></i>等级视频课程</h2>
+            <span>共 ${level.sampleVideos.length} 个视频</span>
+          </div>
+          <div class="level-lesson-list">
+            ${level.sampleVideos.map(video => `
+              <div class="level-lesson-item">
+                <div class="level-lesson-icon" style="background: ${level.gradient};">
+                  <i class="fa-solid fa-play"></i>
+                </div>
+                <div class="level-lesson-info">
+                  <div class="level-lesson-title">${video.title}</div>
+                  <div class="level-lesson-meta">${video.duration} · ${video.subtitles ? video.subtitles.length : 0}句字幕</div>
+                </div>
+                <a href="learn.html?videoId=${video.id}&levelId=${level.id}" class="level-lesson-action">
+                  <i class="fa-solid fa-book-open"></i> 开始学习
+                </a>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast-notification ${type}`;
+      const icons = {
+        success: 'fa-circle-check',
+        error: 'fa-circle-xmark',
+        warning: 'fa-triangle-exclamation',
+        info: 'fa-circle-info'
+      };
+      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i><span>${message}</span>`;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    window.addEventListener('scroll', () => {
+      const navbar = document.getElementById('navbar');
+      if (window.scrollY > 50) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+
+    // 说明：已删除原先 8 条 videoUrl 为空、播放量虚构的默认视频。
+    // 目录页只展示两类真实内容：
+    //   1) 等级示例课程（当前仅含双语字幕）
+    //   2) 通过管理后台上传且确实有视频源的课程
+    // 课程状态由 courseHasVideo() 判定，并在卡片上以「含视频 / 字幕练习」区分。
+
+    // Initialize
+    renderLevelFilter();
+    
+    // Check URL params for level filter
+    const urlParams = new URLSearchParams(window.location.search);
+    const levelParam = urlParams.get('level');
+    if (levelParam) {
+      filterByLevel(levelParam);
+    } else {
+      updateVideoGrid();
+    }
+
+    // Check URL hash for category navigation
+    window.addEventListener('load', () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#category-')) {
+        const categoryName = decodeURIComponent(hash.replace('#category-', ''));
+        if (categoryData[categoryName]) {
+          renderCategoryDetail(categoryName);
+        }
+      } else if (hash.startsWith('#level-')) {
+        const levelId = hash.replace('#level-', '');
+        const level = window.getLevelById(levelId);
+        if (level) {
+          renderLevelDetail(levelId);
+        }
+      }
+    });
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash;
+      if (hash === '') {
+        goBackToCategories();
+      } else if (hash.startsWith('#category-')) {
+        const categoryName = decodeURIComponent(hash.replace('#category-', ''));
+        if (categoryData[categoryName]) {
+          renderCategoryDetail(categoryName);
+        }
+      } else if (hash.startsWith('#level-')) {
+        const levelId = hash.replace('#level-', '');
+        const level = window.getLevelById(levelId);
+        if (level) {
+          renderLevelDetail(levelId);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinguaView - 管理员后台</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="js/theme.js"></script>
+  <style>
+    .navbar { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); }
+    .navbar-brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; }
+    .navbar-links { display: flex; gap: 24px; list-style: none; }
+    .navbar-links a { text-decoration: none; color: var(--text-secondary); font-weight: 500; }
+    .navbar-links a:hover, .navbar-links a.active { color: var(--text-primary); }
+    .btn { padding: 10px 20px; border-radius: var(--radius); font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary { background: var(--primary-color); color: white; }
+    .btn-success { background: var(--success-color); color: white; }
+    .btn-danger { background: var(--danger-color); color: white; }
+    .btn-secondary { background: var(--bg-input); color: var(--text-primary); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn:active { transform: scale(0.96); transition: transform 0.1s ease; }
+    .btn-primary:active { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+    .btn-success:active { background: #059669; }
+    .btn-danger:active { background: #dc2626; }
+    .btn-secondary:active { background: var(--border-color); }
+    .admin-container { display: flex; min-height: 100vh; }
+    .sidebar { width: 220px; background: var(--bg-card); border-right: 1px solid var(--border-color); padding: 24px 0; position: fixed; height: calc(100vh - 60px); top: 60px; }
+    .sidebar-header { padding: 0 20px 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 16px; }
+    .sidebar-header h1 { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+    .sidebar-header h1 i { color: var(--primary-color); }
+    .sidebar-menu { list-style: none; padding: 0 12px; }
+    .sidebar-menu li { margin-bottom: 4px; }
+    .sidebar-menu li a { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--radius); color: var(--text-secondary); text-decoration: none; font-size: 14px; transition: all 0.2s; }
+    .sidebar-menu li a:hover { background: rgba(59, 130, 246, 0.1); color: var(--text-primary); }
+    .sidebar-menu li a.active { background: var(--primary-color); color: white; }
+    .main-content { flex: 1; margin-left: 220px; padding: 24px; padding-top: 84px; padding-bottom: 90px; box-sizing: border-box; min-width: 0; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .page-header h2 { font-size: 22px; font-weight: 600; }
+    .card { background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border-color); padding: 20px; margin-bottom: 20px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+    .card-header h3 { font-size: 15px; font-weight: 600; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--radius); background: var(--bg-input); color: var(--text-primary); font-size: 14px; outline: none; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary-color); }
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+    .upload-area { border: 2px dashed var(--border-color); border-radius: var(--radius); padding: 28px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--bg-input); }
+    .upload-area:hover { border-color: var(--primary-color); background: rgba(59, 130, 246, 0.05); transform: translateY(-2px); }
+    .upload-area:active { transform: translateY(0) scale(0.98); transition: transform 0.15s ease; }
+    .upload-area i { font-size: 40px; color: var(--text-secondary); margin-bottom: 10px; transition: transform 0.3s ease; }
+    .upload-area:hover i { transform: scale(1.1); color: var(--primary-color); }
+    .upload-area p { color: var(--text-secondary); font-size: 13px; }
+    .upload-area input[type="file"] { display: none; }
+    .subtitle-row { display: flex; gap: 10px; align-items: flex-start; padding: 12px; background: var(--bg-input); border-radius: var(--radius); margin-bottom: 10px; }
+    .subtitle-row .time-input { width: 130px; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: var(--radius); background: var(--bg-input); color: var(--text-primary); font-size: 12px; }
+    .subtitle-row .text-input { flex: 1; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: var(--radius); background: var(--bg-input); color: var(--text-primary); font-size: 13px; }
+    .subtitle-row .text-input:focus { border-color: var(--primary-color); }
+    .subtitle-row .delete-btn { padding: 8px; background: rgba(239, 68, 68, 0.1); border: none; border-radius: var(--radius); color: var(--danger-color); cursor: pointer; }
+    .subtitle-row .delete-btn:hover { background: rgba(239, 68, 68, 0.2); }
+    .add-subtitle-btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px; border: 2px dashed var(--border-color); border-radius: var(--radius); color: var(--text-secondary); cursor: pointer; transition: all 0.2s; margin-bottom: 16px; }
+    .add-subtitle-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
+    .video-preview { width: 100%; max-height: 300px; background: #000; border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
+    .video-preview video { width: 100%; height: 100%; object-fit: cover; }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .table th { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; }
+    .table td { font-size: 13px; color: var(--text-secondary); }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 16px; font-size: 11px; font-weight: 500; }
+    .badge-success { background: rgba(34, 197, 94, 0.1); color: var(--success-color); }
+    .badge-warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .action-buttons { display: flex; gap: 6px; }
+    .empty-state { text-align: center; padding: 40px 0; color: var(--text-secondary); }
+    .empty-state i { font-size: 40px; margin-bottom: 12px; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.2s; }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal { background: var(--bg-card); border-radius: var(--radius); width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; background: var(--bg-card); }
+    .modal-header h3 { font-size: 16px; font-weight: 600; }
+    .modal-header button { background: none; border: none; color: var(--text-secondary); font-size: 20px; cursor: pointer; }
+    .modal-body { padding: 20px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--border-color); }
+    .toast { position: fixed; top: 20px; right: 20px; padding: 14px 20px; border-radius: var(--radius); color: white; font-size: 13px; font-weight: 500; z-index: 2000; transform: translateX(120%); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 10px; max-width: 380px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .toast i { font-size: 16px; flex-shrink: 0; }
+    .toast.success { background: var(--success-color); }
+    .toast.error { background: var(--danger-color); }
+    .toast.warning { background: var(--warning-color); }
+    .toast.info { background: var(--primary-color); }
+    .toast.show { transform: translateX(0); }
+    .preview-subtitle { background: rgba(0,0,0,0.7); color: white; padding: 10px 14px; border-radius: 6px; font-size: 14px; margin-bottom: 6px; }
+    .preview-subtitle .en { font-weight: 500; }
+    .preview-subtitle .zh { font-size: 13px; opacity: 0.9; }
+    html, body { overflow-x: hidden; overflow-x: clip; max-width: 100%; }
+    .form-group input, .form-group select, .form-group textarea, .subtitle-row input, .table-wrap { box-sizing: border-box; }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .action-bar { position: sticky; bottom: 0; left: 0; right: 0; display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; background: var(--bg-card); border-top: 1px solid var(--border-color); border-radius: var(--radius); box-shadow: 0 -4px 12px rgba(0,0,0,0.08); z-index: 50; margin-top: 16px; }
+    .action-bar .btn { min-width: 140px; justify-content: center; }
+    .upload-area { padding: 32px 20px; }
+    .upload-area .upload-icon { font-size: 44px; }
+    @media (max-width: 768px) {
+      .admin-container { flex-direction: column; }
+      .sidebar { position: static; width: 100%; height: auto; top: auto; padding: 12px 0; border-right: none; border-bottom: 1px solid var(--border-color); }
+      .sidebar-header { padding: 0 16px 12px; margin-bottom: 8px; }
+      .sidebar-menu { display: flex; gap: 8px; padding: 0 12px 12px; overflow-x: auto; flex-wrap: nowrap; }
+      .sidebar-menu li { margin-bottom: 0; flex-shrink: 0; }
+      .sidebar-menu li a { padding: 8px 14px; font-size: 13px; white-space: nowrap; }
+      .main-content { margin-left: 0; padding: 16px; padding-top: 20px; }
+      .form-row { flex-direction: column; gap: 0; }
+      .page-header h2 { font-size: 18px; }
+      .action-bar { flex-direction: column-reverse; }
+      .action-bar .btn { width: 100%; }
+      .subtitle-row { flex-wrap: wrap; }
+      .subtitle-row .time-input { width: 100px; }
+      .navbar { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+      .navbar-links { display: none; }
+      .card { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 管理入口访问保护（MVP 级：仅挡住普通访客；正式部署请改为后端鉴权） -->
+  <div id="adminGate" style="position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: var(--bg-primary); padding: 20px;">
+    <div class="card" style="max-width: 420px; width: 100%; text-align: center; padding: 32px 28px;">
+      <div style="width: 56px; height: 56px; border-radius: 14px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #3b82f6, #a855f7); color: #fff; font-size: 24px;">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <h2 style="font-size: 20px; margin-bottom: 8px; color: var(--text-primary);">管理后台</h2>
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6;">
+        此页面仅限课程管理员使用。普通学习者请返回学习站。
+      </p>
+      <input id="adminKeyInput" type="password" placeholder="请输入管理员口令" autocomplete="off"
+             style="width: 100%; padding: 12px 14px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 14px; background: var(--bg-input); color: var(--text-primary); outline: none; margin-bottom: 12px; box-sizing: border-box;">
+      <div id="adminGateMsg" style="font-size: 12px; color: var(--error-color); min-height: 18px; margin-bottom: 8px;"></div>
+      <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="tryAdminLogin()">进入后台</button>
+      <a href="index.html" style="display: block; margin-top: 14px; font-size: 13px; color: var(--text-secondary); text-decoration: none;">← 返回学习站</a>
+    </div>
+  </div>
+
+  <nav class="navbar">
+    <div class="navbar-brand"><svg class="brand-logo" style="flex-shrink:0; filter:drop-shadow(0 2px 6px rgba(59,130,246,0.3));" viewBox="0 0 36 36" width="28" height="28" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lv-grad" x1="0" y1="0" x2="36" y2="36"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs><path d="M3 7a3 3 0 0 1 3-3h24a3 3 0 0 1 3 3v16a3 3 0 0 1-3 3H17l-7 5v-5H6a3 3 0 0 1-3-3V7z" fill="url(#lv-grad)"/><rect x="11" y="12" width="3" height="11" rx="1.2" fill="white"/><rect x="11" y="19.5" width="9" height="3" rx="1.2" fill="white"/><circle cx="24" cy="13" r="2.2" fill="white"/></svg><span>LinguaView</span></div>
+    <ul class="navbar-links">
+      <li><a href="index.html">返回学习站</a></li>
+      <li><a href="catalog.html">学习目录</a></li>
+      <li><a href="admin.html" class="active">管理后台</a></li>
+    </ul>
+    <button class="theme-toggle" onclick="toggleTheme()" title="切换深色模式">
+      <i class="fa-solid fa-moon"></i>
+      <i class="fa-solid fa-sun"></i>
+    </button>
+    <button class="hamburger" onclick="toggleMobileMenu()" title="菜单">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html">返回学习站</a>
+    <a href="catalog.html">学习目录</a>
+    <a href="admin.html" class="active">管理后台</a>
+  </div>
+
+  <div class="admin-container">
+    <aside class="sidebar">
+      <div class="sidebar-header"><h1><i class="fa-solid fa-gears"></i>管理后台</h1></div>
+      <ul class="sidebar-menu">
+        <li><a href="#upload" class="active" onclick="showSection('upload')"><i class="fa-solid fa-plus-circle"></i>上传视频</a></li>
+        <li><a href="#videos" onclick="showSection('videos')"><i class="fa-solid fa-video"></i>视频列表</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <section id="upload-section" class="page-section">
+        <div class="page-header"><h2>上传视频 &amp; 编辑字幕</h2></div>
+        <div class="card">
+          <div class="card-header"><h3>视频上传</h3></div>
+          <div class="form-group">
+            <label>视频文件 (MP4)</label>
+            <div class="upload-area" onclick="document.getElementById('video-upload').click()">
+              <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+              <p style="font-size: 15px; color: var(--text-primary); font-weight: 500; margin-bottom: 6px;">拖拽文件到此处或点击选择</p>
+              <p style="font-size: 12px; color: var(--text-secondary);">支持 MP4/WebM，最大 500MB</p>
+              <input type="file" id="video-upload" accept=".mp4,.mov,.avi,.webm,.mkv" onchange="handleVideoUpload(this)" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>或输入视频URL</label>
+            <input type="text" id="video-url" placeholder="https://example.com/video.mp4">
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>标题</label><input type="text" id="video-title" placeholder="输入视频标题"></div>
+            <div class="form-group"><label>分类</label><select id="video-category"><option value="学习精选">学习精选</option><option value="Vlog">Vlog</option><option value="商务英语">商务英语</option><option value="日常口语">日常口语</option><option value="影视英语">影视英语</option><option value="新闻英语">新闻英语</option><option value="旅游英语">旅游英语</option></select></div>
+          </div>
+          <div class="form-group"><label>标签（用逗号分隔）</label><input type="text" id="video-tags" placeholder="#英语, #英语口语"></div>
+          <div id="video-preview-container" style="display: none; margin-top: 16px;">
+            <!-- 视频预览统一使用 video-player-area 中的元素，此处不再重复 -->
+          </div>
+        </div>
+
+        <div class="card" style="border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.04);">
+          <div class="card-header">
+            <h3 style="color: var(--error-color);"><i class="fa-solid fa-shield-halved"></i> 安全提示：密钥仅限本机演示</h3>
+          </div>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 10px;">
+            下面的翻译 / 语音 API 密钥目前<strong style="color: var(--text-primary);">只保存在本浏览器的 localStorage 中，并直接由浏览器发起请求</strong>。
+            这种方式仅适合本机调试，<strong style="color: var(--error-color);">不适合正式上线</strong>。
+          </p>
+          <ul style="font-size: 13px; color: var(--text-secondary); line-height: 1.8; padding-left: 20px;">
+            <li>正式部署时，密钥应由<strong style="color: var(--text-primary);">后端保管</strong>，由后端转发请求，前端不接触密钥。</li>
+            <li>本机调试完成后，建议在浏览器设置中清除本站数据，避免密钥残留。</li>
+            <li>不要在公共电脑或共享浏览器中填入真实密钥。</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-robot"></i> AI翻译设置</h3>
+            <span id="baidu-config-status" style="font-size: 12px; padding: 4px 10px; border-radius: 12px; background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+              <i class="fa-solid fa-circle-xmark"></i> 未配置
+            </span>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>百度翻译API AppID</label><input type="text" id="baidu-appid" placeholder="输入百度翻译AppID" value=""></div>
+            <div class="form-group"><label>百度翻译API Key</label><input type="password" id="baidu-appkey" placeholder="输入百度翻译Key" value=""></div>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-secondary btn-sm" onclick="saveBaiduConfig()"><i class="fa-solid fa-save"></i>保存配置</button>
+            <button class="btn btn-secondary btn-sm" onclick="testBaiduAPI()"><i class="fa-solid fa-test-tube"></i>测试连接</button>
+          </div>
+          <p style="font-size: 12px; color: var(--text-secondary); margin-top: 12px;">
+            <i class="fa-solid fa-info-circle"></i> 获取百度翻译API：<a href="https://fanyi-api.baidu.com/" target="_blank" style="color: var(--primary-color);">https://fanyi-api.baidu.com/</a>
+          </p>
+        </div>
+
+        <div class="card" style="border: 1px solid rgba(34, 197, 94, 0.3);">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-microphone-lines" style="color: var(--success-color);"></i> AI语音识别设置</h3>
+            <span id="speech-config-status" style="font-size: 12px; padding: 4px 10px; border-radius: 12px; background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+              <i class="fa-solid fa-circle-xmark"></i> 未配置
+            </span>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>百度智能云 API Key</label><input type="text" id="speech-api-key" placeholder="输入语音识别API Key" value=""></div>
+            <div class="form-group"><label>百度智能云 Secret Key</label><input type="password" id="speech-secret-key" placeholder="输入语音识别Secret Key" value=""></div>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-secondary btn-sm" onclick="saveSpeechConfig()"><i class="fa-solid fa-save"></i>保存配置</button>
+            <button class="btn btn-secondary btn-sm" onclick="testSpeechAPI()"><i class="fa-solid fa-test-tube"></i>测试连接</button>
+          </div>
+          <p style="font-size: 12px; color: var(--text-secondary); margin-top: 12px;">
+            <i class="fa-solid fa-info-circle"></i> 获取百度语音识别API：<a href="https://console.bce.baidu.com/ai/#/ai/speech/app/list" target="_blank" style="color: var(--primary-color);">百度智能云-语音技术</a>（与翻译API不同，需单独创建应用）
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>字幕编辑</h3>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('srt-upload').click()"><i class="fa-solid fa-file-import"></i>导入SRT</button>
+              <input type="file" id="srt-upload" accept=".srt" style="display: none;" onchange="handleSrtUpload(this)" />
+              <button class="btn btn-secondary btn-sm" onclick="exportSrt()"><i class="fa-solid fa-file-export"></i>导出英文</button>
+              <button class="btn btn-secondary btn-sm" onclick="exportChineseSrt()"><i class="fa-solid fa-file-export"></i>导出中文</button>
+              <button class="btn btn-secondary btn-sm" onclick="exportBilingualSrt()"><i class="fa-solid fa-file-arrow-down"></i>导出双语</button>
+              <button class="btn btn-primary btn-sm" onclick="autoTranslateWithBackend()"><i class="fa-solid fa-robot"></i>一键翻译</button>
+              <button class="btn btn-success btn-sm" onclick="transcribeVideoAudio()" id="stt-btn"><i class="fa-solid fa-waveform-lines"></i>AI直接识别视频音频</button>
+              <button class="btn btn-primary btn-sm" onclick="recognizeAndTranslate()" id="stt-translate-btn" style="background: linear-gradient(135deg, var(--primary-color), var(--success-color));"><i class="fa-solid fa-wand-magic-sparkles"></i>识别+翻译+保存</button>
+              <button class="btn btn-secondary btn-sm" onclick="startAutoTranscribe()" title="使用麦克风识别（需外放声音）"><i class="fa-solid fa-microphone"></i>麦克风识别</button>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%); border-radius: var(--radius); border: 1px solid rgba(59, 130, 246, 0.2);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+              <i class="fa-solid fa-play-circle" style="font-size: 20px; color: var(--primary-color);"></i>
+              <span style="font-weight: 500; color: var(--text-primary);">AI字幕生成流程（点击"识别+翻译+保存"一键完成）</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); flex-wrap: wrap;">
+              <span style="display: flex; align-items: center; gap: 4px;">
+                <span style="width: 20px; height: 20px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px;">1</span>
+                上传视频
+              </span>
+              <i class="fa-solid fa-arrow-right"></i>
+              <span style="display: flex; align-items: center; gap: 4px;">
+                <span style="width: 20px; height: 20px; background: var(--success-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px;">2</span>
+                AI识别语音（自动记录时间轴）
+              </span>
+              <i class="fa-solid fa-arrow-right"></i>
+              <span style="display: flex; align-items: center; gap: 4px;">
+                <span style="width: 20px; height: 20px; background: var(--warning-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px;">3</span>
+                自动翻译中文
+              </span>
+              <i class="fa-solid fa-arrow-right"></i>
+              <span style="display: flex; align-items: center; gap: 4px;">
+                <span style="width: 20px; height: 20px; background: var(--text-primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px;">4</span>
+                保存/导出字幕
+              </span>
+            </div>
+          </div>
+
+          <div id="video-player-area" style="display: none; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-size: 13px; font-weight: 500;">视频预览（用于AI识别）</span>
+              <button class="btn btn-danger btn-sm" onclick="closeVideoPlayer()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <video id="video-preview" controls style="width: 100%; max-height: 300px; border-radius: 8px; background: #000;"></video>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+              <button class="btn btn-success btn-sm" onclick="transcribeVideoAudio()"><i class="fa-solid fa-waveform-lines"></i> AI直接识别音频</button>
+              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('video-preview').play()"><i class="fa-solid fa-play"></i> 播放</button>
+              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('video-preview').pause()"><i class="fa-solid fa-pause"></i> 暂停</button>
+              <button class="btn btn-primary btn-sm" onclick="recognizeAndTranslate()" style="background: linear-gradient(135deg, var(--primary-color), var(--success-color));"><i class="fa-solid fa-wand-magic-sparkles"></i> 一键识别+翻译+保存</button>
+            </div>
+          </div>
+
+          <div id="upload-video-hint" style="margin-bottom: 16px; padding: 16px; text-align: center; background: rgba(251, 191, 36, 0.1); border-radius: var(--radius); border: 2px dashed rgba(251, 191, 36, 0.3);">
+            <i class="fa-solid fa-video" style="font-size: 40px; color: var(--warning-color); margin-bottom: 10px;"></i>
+            <p style="font-size: 14px; color: var(--text-primary); font-weight: 500;">还没有导入视频</p>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">点击下方按钮上传视频，AI将自动识别语音生成字幕</p>
+            <button class="btn btn-warning btn-sm" style="margin-top: 12px;" onclick="document.getElementById('video-upload').click()">
+              <i class="fa-solid fa-upload"></i> 上传视频
+            </button>
+          </div>
+
+          <div id="stt-status" style="display: none; margin-bottom: 16px; padding: 12px; background: rgba(34, 197, 94, 0.1); border-radius: var(--radius); border: 1px solid rgba(34, 197, 94, 0.3);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 10px; height: 10px; background: #22c55e; border-radius: 50%; animation: pulse 1s infinite;"></div>
+              <span style="color: var(--success-color); font-weight: 500;" id="stt-message">正在识别中...</span>
+              <span style="font-size: 12px; color: var(--text-secondary); margin-left: 8px;" id="stt-progress"></span>
+              <button class="btn btn-danger btn-sm" onclick="stopAutoTranscribe()" style="margin-left: auto;">停止</button>
+            </div>
+            <div style="margin-top: 10px; font-size: 12px; color: var(--text-secondary);">
+              <i class="fa-solid fa-info-circle"></i> 请确保视频有音频且正在播放，麦克风权限已开启。识别完成后将自动记录时间轴。
+            </div>
+          </div>
+
+          <div id="subtitle-list">
+          </div>
+
+          <div class="add-subtitle-btn" onclick="addSubtitleRow()">
+            <i class="fa-solid fa-plus"></i>添加字幕行
+          </div>
+
+          <div class="form-group">
+            <label>字幕预览</label>
+            <div id="subtitle-preview" style="background: var(--bg-input); padding: 12px; border-radius: var(--radius); max-height: 200px; overflow-y: auto;"></div>
+          </div>
+
+        </div>
+
+        <div class="action-bar">
+          <button class="btn btn-secondary" onclick="resetForm()"><i class="fa-solid fa-rotate-left"></i>重置</button>
+          <button class="btn btn-primary" onclick="saveVideoAndSubtitles()"><i class="fa-solid fa-save"></i>保存视频和字幕</button>
+        </div>
+      </section>
+
+      <section id="videos-section" class="page-section" style="display: none;">
+        <div class="page-header"><h2>视频列表</h2></div>
+        <div class="card">
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr><th>ID</th><th>标题</th><th>分类</th><th>标签</th><th>状态</th><th>操作</th></tr>
+              </thead>
+              <tbody id="video-table-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="edit-modal">
+    <div class="modal">
+      <div class="modal-header"><h3>编辑视频</h3><button onclick="closeEditModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="form-group"><label>标题</label><input type="text" id="edit-title"></div>
+        <div class="form-group"><label>分类</label><select id="edit-category"><option value="学习精选">学习精选</option><option value="Vlog">Vlog</option><option value="商务英语">商务英语</option><option value="日常口语">日常口语</option><option value="影视英语">影视英语</option><option value="新闻英语">新闻英语</option><option value="旅游英语">旅游英语</option></select></div>
+        <div class="form-group"><label>标签</label><input type="text" id="edit-tags"></div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" onclick="closeEditModal()">取消</button><button class="btn btn-primary" onclick="saveEdit()">保存修改</button></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let subtitles = [];
+    let videos = JSON.parse(localStorage.getItem('linguaview_videos') || '[]');
+    let editingVideoId = null;
+
+    function showSection(section) {
+      document.querySelectorAll('.page-section').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.sidebar-menu li a').forEach(el => el.classList.remove('active'));
+      document.getElementById(`${section}-section`).style.display = 'block';
+      document.querySelector(`[href="#${section}"]`).classList.add('active');
+      if (section === 'videos') renderVideoList();
+    }
+
+    function addSubtitleRow(startTime = '', endTime = '', english = '', chinese = '') {
+      const list = document.getElementById('subtitle-list');
+      const id = Date.now();
+      subtitles.push({ id, startTime, endTime, english, chinese });
+      list.innerHTML += `
+        <div class="subtitle-row" data-id="${id}">
+          <input type="text" class="time-input" placeholder="00:00:01,000" value="${startTime}" onchange="updateSubtitle(${id}, 'startTime', this.value)">
+          <span style="color: var(--text-secondary); margin-top: 8px;">--></span>
+          <input type="text" class="time-input" placeholder="00:00:03,000" value="${endTime}" onchange="updateSubtitle(${id}, 'endTime', this.value)">
+          <input type="text" class="text-input" placeholder="英文句子" value="${english}" onchange="updateSubtitle(${id}, 'english', this.value)">
+          <input type="text" class="text-input" placeholder="中文翻译" value="${chinese}" onchange="updateSubtitle(${id}, 'chinese', this.value)">
+          <button class="btn btn-secondary btn-sm" onclick="translateSingleSubtitle(${id})" style="padding: 8px; margin-left: 4px;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </button>
+          <button class="delete-btn" onclick="deleteSubtitle(${id})"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      `;
+      updatePreview();
+    }
+
+    function updateSubtitle(id, field, value) {
+      const subtitle = subtitles.find(s => s.id === id);
+      if (subtitle) {
+        subtitle[field] = value;
+        updatePreview();
+      }
+    }
+
+    function deleteSubtitle(id) {
+      subtitles = subtitles.filter(s => s.id !== id);
+      document.querySelector(`.subtitle-row[data-id="${id}"]`).remove();
+      updatePreview();
+    }
+
+    function updatePreview() {
+      const preview = document.getElementById('subtitle-preview');
+      if (subtitles.length === 0) {
+        preview.innerHTML = '<p style="color: var(--text-secondary); font-size: 13px;">暂无字幕，请添加</p>';
+        return;
+      }
+      preview.innerHTML = subtitles.map(s => `
+        <div class="preview-subtitle">
+          <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">${s.startTime || '--'} --> ${s.endTime || '--'}</div>
+          <div class="en">${s.english || '(英文)'}</div>
+          <div class="zh">${s.chinese || '(中文)'}</div>
+        </div>
+      `).join('');
+    }
+
+    function handleVideoUpload(input) {
+      const file = input.files[0];
+      if (file) {
+        // 保存文件引用，保存时写入 IndexedDB（blob 地址跨页面会失效）
+        window.__pendingVideoFile = file;
+        const videoUrl = URL.createObjectURL(file);
+        document.getElementById('video-url').value = videoUrl;
+
+        const previewVideo = document.getElementById('video-preview');
+        previewVideo.src = videoUrl;
+        previewVideo.load();
+
+        document.getElementById('video-preview-container').style.display = 'block';
+        document.getElementById('video-player-area').style.display = 'block';
+        document.getElementById('upload-video-hint').style.display = 'none';
+
+        showToast(`已选择视频: ${file.name}`, 'success');
+      }
+    }
+
+    function closeVideoPlayer() {
+      document.getElementById('video-player-area').style.display = 'none';
+      document.getElementById('video-preview').pause();
+      document.getElementById('video-preview').src = '';
+      document.getElementById('video-url').value = '';
+      document.getElementById('video-upload').value = '';
+      document.getElementById('upload-video-hint').style.display = 'block';
+    }
+
+    function handleSrtUpload(input) {
+      const file = input.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          parseSrt(e.target.result);
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    function parseSrt(srtContent) {
+      const lines = srtContent.split('\n');
+      let currentSubtitle = {};
+      let mode = 'index';
+      
+      subtitles = [];
+      document.getElementById('subtitle-list').innerHTML = '';
+
+      lines.forEach(line => {
+        line = line.trim();
+        if (!line) return;
+
+        if (mode === 'index') {
+          mode = 'time';
+        } else if (mode === 'time') {
+          const match = line.match(/(.+) --> (.+)/);
+          if (match) {
+            currentSubtitle.startTime = match[1].trim();
+            currentSubtitle.endTime = match[2].trim();
+            mode = 'text';
+            currentSubtitle.english = '';
+            currentSubtitle.chinese = '';
+          }
+        } else if (mode === 'text') {
+          if (!currentSubtitle.english) {
+            currentSubtitle.english = line;
+          } else if (!currentSubtitle.chinese) {
+            currentSubtitle.chinese = line;
+            addSubtitleRow(currentSubtitle.startTime, currentSubtitle.endTime, currentSubtitle.english, currentSubtitle.chinese);
+            mode = 'index';
+          }
+        }
+      });
+      showToast('SRT文件导入成功', 'success');
+    }
+
+    function exportSrt() {
+      if (subtitles.length === 0) {
+        showToast('暂无字幕可导出', 'warning');
+        return;
+      }
+
+      let srtContent = '';
+      subtitles.forEach((s, i) => {
+        srtContent += `${i + 1}\n`;
+        srtContent += `${s.startTime || '00:00:00,000'} --> ${s.endTime || '00:00:02,000'}\n`;
+        srtContent += `${s.english || ''}\n\n`;
+      });
+
+      downloadFile(srtContent, 'subtitles_en.srt');
+      showToast(`英文字幕导出成功（${subtitles.length} 条）`, 'success');
+    }
+
+    // 导出中文字幕SRT
+    function exportChineseSrt() {
+      if (subtitles.length === 0) {
+        showToast('暂无字幕可导出', 'warning');
+        return;
+      }
+
+      let srtContent = '';
+      subtitles.forEach((s, i) => {
+        if (!s.chinese) return;
+        srtContent += `${i + 1}\n`;
+        srtContent += `${s.startTime || '00:00:00,000'} --> ${s.endTime || '00:00:02,000'}\n`;
+        srtContent += `${s.chinese}\n\n`;
+      });
+
+      downloadFile(srtContent, 'subtitles_zh.srt');
+      showToast(`中文字幕导出成功`, 'success');
+    }
+
+    // 导出双语字幕SRT
+    function exportBilingualSrt() {
+      if (subtitles.length === 0) {
+        showToast('暂无字幕可导出', 'warning');
+        return;
+      }
+
+      let srtContent = '';
+      subtitles.forEach((s, i) => {
+        srtContent += `${i + 1}\n`;
+        srtContent += `${s.startTime || '00:00:00,000'} --> ${s.endTime || '00:00:02,000'}\n`;
+        srtContent += `${s.english || ''}\n`;
+        srtContent += `${s.chinese || ''}\n\n`;
+      });
+
+      downloadFile(srtContent, 'subtitles_bilingual.srt');
+      showToast(`双语字幕导出成功（${subtitles.length} 条）`, 'success');
+    }
+
+    // 通用文件下载
+    function downloadFile(content, filename) {
+      const blob = new Blob(['\uFEFF' + content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    async function saveVideoAndSubtitles() {
+      const title = document.getElementById('video-title').value;
+      const category = document.getElementById('video-category').value;
+      const tags = document.getElementById('video-tags').value;
+      const videoUrl = document.getElementById('video-url').value.trim();
+
+      if (!title) {
+        showToast('请输入视频标题', 'warning');
+        return;
+      }
+
+      showToast('正在保存...', 'info');
+
+      const subtitleData = subtitles.map(s => ({
+        startTime: parseTime(s.startTime),
+        endTime: parseTime(s.endTime),
+        english: s.english,
+        chinese: s.chinese,
+        keyWords: [],
+        vocab: []
+      }));
+
+      if (currentVideoId) {
+        try {
+          const response = await fetch('http://localhost:8001/api/save-video', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              video_id: currentVideoId,
+              title: title,
+              category: category,
+              tags: tags.split(',').map(t => t.trim()).filter(t => t),
+              video_path: `/api/video/${currentVideoId}`,
+              subtitles: subtitleData
+            })
+          });
+
+          const result = await response.json();
+          showToast('视频保存到服务器成功！', 'success');
+          
+          fetchVideosFromServer();
+          return;
+        } catch (error) {
+          showToast('服务器保存失败，尝试保存到本地...', 'error');
+        }
+      }
+
+      let finalVideoUrl = videoUrl;
+      let isBlobUrl = videoUrl.startsWith('blob:');
+      const keepFile = window.__pendingVideoFile;
+      // 编辑时沿用原 id，保证 IndexedDB 里的文件能对应上
+      const vid = editingVideoId || Date.now();
+      let sourceId = null;
+
+      if (keepFile) {
+        // 本地文件：写入 IndexedDB，跨页面/刷新都能读取
+        try {
+          await PersistentVideo.storeVideo(vid, keepFile);
+          sourceId = vid;
+          finalVideoUrl = '';
+          window.__pendingVideoFile = null;
+        } catch (err) {
+          console.error('视频文件存入 IndexedDB 失败:', err);
+          showToast('视频文件保存失败，请重新上传', 'error');
+        }
+      } else if (isBlobUrl) {
+        showToast('注意：本地视频文件将使用blob URL，刷新页面后可能无法播放', 'warning');
+      } else {
+        // 编辑已入库的视频时，保留原 sourceId 与源
+        const existing = videos.find(v => String(v.id) === String(vid));
+        if (existing && existing.sourceId) {
+          sourceId = existing.sourceId;
+        }
+      }
+
+      const video = {
+        id: vid,
+        title,
+        category,
+        tags: tags.split(',').map(t => t.trim()).filter(t => t),
+        duration: calculateDuration(),
+        videoUrl: finalVideoUrl,
+        sourceId,
+        subtitles: subtitleData,
+        isBlob: isBlobUrl
+      };
+
+      videos.push(video);
+      localStorage.setItem('linguaview_videos', JSON.stringify(videos));
+      
+      document.getElementById('video-title').value = '';
+      document.getElementById('video-category').value = '学习精选';
+      document.getElementById('video-tags').value = '';
+      document.getElementById('video-url').value = '';
+      document.getElementById('subtitle-list').innerHTML = '';
+      subtitles = [];
+      currentVideoId = null;
+      updatePreview();
+      
+      showToast('视频和字幕保存成功！', 'success');
+      
+      renderVideoList();
+    }
+
+    function parseTime(timeStr) {
+      if (!timeStr) return 0;
+      const parts = timeStr.split(':');
+      if (parts.length === 3) {
+        const [hours, minutes, rest] = parts;
+        const [seconds, ms] = rest.split(',');
+        return parseFloat(hours) * 3600 + parseFloat(minutes) * 60 + parseFloat(seconds) + parseFloat(ms || 0) / 1000;
+      }
+      return 0;
+    }
+
+    function calculateDuration() {
+      if (subtitles.length === 0) return '00:00';
+      const last = subtitles[subtitles.length - 1];
+      const seconds = Math.ceil(parseTime(last.endTime));
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function renderVideoList() {
+      videos = JSON.parse(localStorage.getItem('linguaview_videos') || '[]');
+      const tbody = document.getElementById('video-table-body');
+      
+      if (videos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><i class="fa-solid fa-video-slash"></i><p>暂无视频</p></td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = videos.map(v => `
+        <tr>
+          <td>${v.id}</td>
+          <td>${v.title}</td>
+          <td>${v.category}</td>
+          <td>${v.tags.join(', ') || '-'}</td>
+          <td><span class="badge badge-success">已发布</span></td>
+          <td class="action-buttons">
+            <button class="btn btn-secondary btn-sm" onclick="editVideo(${v.id})"><i class="fa-solid fa-edit"></i></button>
+            <button class="btn btn-danger btn-sm" onclick="deleteVideo(${v.id})"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function editVideo(id) {
+      const video = videos.find(v => v.id === id);
+      if (video) {
+        editingVideoId = id;
+        document.getElementById('edit-title').value = video.title;
+        document.getElementById('edit-category').value = video.category;
+        document.getElementById('edit-tags').value = video.tags.join(', ');
+        document.getElementById('edit-modal').classList.add('active');
+      }
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-modal').classList.remove('active');
+      editingVideoId = null;
+    }
+
+    function saveEdit() {
+      const video = videos.find(v => v.id === editingVideoId);
+      if (video) {
+        video.title = document.getElementById('edit-title').value;
+        video.category = document.getElementById('edit-category').value;
+        video.tags = document.getElementById('edit-tags').value.split(',').map(t => t.trim()).filter(t => t);
+        localStorage.setItem('linguaview_videos', JSON.stringify(videos));
+        closeEditModal();
+        renderVideoList();
+        showToast('修改保存成功', 'success');
+      }
+    }
+
+    function deleteVideo(id) {
+      if (confirm('确定要删除这个视频吗？')) {
+        videos = videos.filter(v => v.id !== id);
+        localStorage.setItem('linguaview_videos', JSON.stringify(videos));
+        renderVideoList();
+        showToast('视频删除成功', 'success');
+      }
+    }
+
+    // AI语音识别 - 完整流程
+    let recognition = null;
+    let isRecognizing = false;
+    let recognizedSegments = []; // 存储识别片段 {start, end, text}
+    let recognitionStartTime = 0;
+    let autoTranslateAfterRecognize = false;
+    let autoSaveAfterRecognize = false;
+
+    // ====== 百度智能云语音识别 API ======
+
+    function saveSpeechConfig() {
+      const apiKey = document.getElementById('speech-api-key').value.trim();
+      const secretKey = document.getElementById('speech-secret-key').value.trim();
+      if (!apiKey || !secretKey) {
+        showToast('请填写API Key和Secret Key', 'warning');
+        return;
+      }
+      localStorage.setItem('linguaview_speech_config', JSON.stringify({ apiKey, secretKey }));
+      updateSpeechConfigStatus({ apiKey, secretKey });
+      showToast('语音识别配置已保存', 'success');
+    }
+
+    function loadSpeechConfig() {
+      const config = JSON.parse(localStorage.getItem('linguaview_speech_config') || '{}');
+      if (config.apiKey) document.getElementById('speech-api-key').value = config.apiKey;
+      if (config.secretKey) document.getElementById('speech-secret-key').value = config.secretKey;
+      updateSpeechConfigStatus(config);
+    }
+
+    function updateSpeechConfigStatus(config) {
+      const statusEl = document.getElementById('speech-config-status');
+      if (!statusEl) return;
+      if (config.apiKey && config.secretKey) {
+        statusEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> 已配置';
+        statusEl.style.background = 'rgba(34, 197, 94, 0.1)';
+        statusEl.style.color = '#22c55e';
+      } else {
+        statusEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> 未配置';
+        statusEl.style.background = 'rgba(239, 68, 68, 0.1)';
+        statusEl.style.color = '#ef4444';
+      }
+    }
+
+    async function testSpeechAPI() {
+      const config = JSON.parse(localStorage.getItem('linguaview_speech_config') || '{}');
+      if (!config.apiKey || !config.secretKey) {
+        showToast('请先填写并保存API配置', 'warning');
+        return;
+      }
+      showToast('正在测试连接...', 'info');
+      try {
+        const token = await getBaiduSpeechToken(config.apiKey, config.secretKey);
+        if (token) {
+          showToast(`连接成功！Token已获取（前10位: ${token.substring(0, 10)}...）`, 'success');
+        } else {
+          showToast('获取Token失败，请检查API Key和Secret Key', 'error');
+        }
+      } catch (e) {
+        showToast('测试失败: ' + e.message, 'error');
+      }
+    }
+
+    // 获取百度智能云 access_token
+    async function getBaiduSpeechToken(apiKey, secretKey) {
+      const tokenUrl = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${apiKey}&client_secret=${secretKey}`;
+      const proxies = [
+        '', // 直连尝试
+        'https://corsproxy.io/?',
+        'https://api.allorigins.win/raw?url=',
+        'https://cors-anywhere.herokuapp.com/'
+      ];
+      for (const proxy of proxies) {
+        try {
+          const resp = await fetch(proxy + (proxy ? encodeURIComponent(tokenUrl) : tokenUrl), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          if (!resp.ok) continue;
+          const data = await resp.json();
+          if (data.access_token) return data.access_token;
+        } catch (e) { /* 尝试下一个代理 */ }
+      }
+      return null;
+    }
+
+    // 发送音频到百度 ASR
+    async function recognizeAudioChunk(base64Audio, audioLength, token) {
+      const apiUrl = 'https://vop.baidu.com/pro_api';
+      const body = {
+        format: 'pcm',
+        rate: 16000,
+        channel: 1,
+        cuid: 'linguaview_admin',
+        token: token,
+        speech: base64Audio,
+        len: audioLength
+      };
+      const proxies = ['', 'https://corsproxy.io/?', 'https://api.allorigins.win/raw?url='];
+      for (const proxy of proxies) {
+        try {
+          const resp = await fetch(proxy + (proxy ? encodeURIComponent(apiUrl) : apiUrl), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+          if (!resp.ok) continue;
+          const data = await resp.json();
+          if (data.err_no === 0 && data.result) {
+            return { success: true, text: data.result.join('') };
+          } else if (data.err_no !== 0) {
+            console.warn('ASR error:', data.err_no, data.err_msg);
+            return { success: false, error: data.err_msg };
+          }
+        } catch (e) { /* 尝试下一个代理 */ }
+      }
+      return { success: false, error: '所有代理均失败' };
+    }
+
+    // 从视频元素提取音频（静音播放，用 captureStream 录制）
+    async function extractAudioFromVideo(videoEl) {
+      return new Promise(async (resolve, reject) => {
+        try {
+          // captureStream 获取视频内的音频流
+          if (!videoEl.captureStream) {
+            reject(new Error('浏览器不支持 captureStream'));
+            return;
+          }
+
+          const stream = videoEl.captureStream();
+          const audioTracks = stream.getAudioTracks();
+          if (audioTracks.length === 0) {
+            reject(new Error('视频没有音轨'));
+            return;
+          }
+
+          // 仅保留音频
+          const audioStream = new MediaStream(audioTracks);
+          const recorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm;codecs=opus' });
+          const chunks = [];
+
+          recorder.ondataavailable = (e) => {
+            if (e.data.size > 0) chunks.push(e.data);
+          };
+
+          recorder.onstop = async () => {
+            try {
+              const blob = new Blob(chunks, { type: 'audio/webm' });
+              const arrayBuffer = await blob.arrayBuffer();
+
+              // 创建 AudioContext 以 16kHz 解码
+              const audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+              const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+              resolve(audioBuffer);
+            } catch (e) {
+              reject(e);
+            }
+          };
+
+          // 静音播放视频（用户不需要听到声音）
+          const originalVolume = videoEl.volume;
+          const originalMuted = videoEl.muted;
+          videoEl.volume = 0;
+          videoEl.muted = true;
+
+          videoEl.currentTime = 0;
+          await videoEl.play();
+          recorder.start();
+
+          const onEnded = () => {
+            recorder.stop();
+            videoEl.volume = originalVolume;
+            videoEl.muted = originalMuted;
+            videoEl.onended = null;
+          };
+          videoEl.onended = onEnded;
+
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+
+    // 从 AudioBuffer 提取 PCM 数据并转为 base64
+    function getPCMBlob(audioBuffer, startTime, endTime) {
+      const sampleRate = 16000;
+      const startSample = Math.floor(startTime * audioBuffer.sampleRate);
+      const endSample = Math.floor(endTime * audioBuffer.sampleRate);
+      const channelData = audioBuffer.getChannelData(0);
+
+      const length = endSample - startSample;
+      const pcmData = new Int16Array(length);
+
+      // 下采样到 16kHz
+      const ratio = audioBuffer.sampleRate / sampleRate;
+      for (let i = 0; i < length; i++) {
+        const sourceIndex = Math.floor(startSample + i * ratio);
+        if (sourceIndex < channelData.length) {
+          const sample = Math.max(-1, Math.min(1, channelData[sourceIndex]));
+          pcmData[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+        }
+      }
+
+      return pcmData.buffer;
+    }
+
+    function arrayBufferToBase64(buffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+      }
+      return btoa(binary);
+    }
+
+    // 直接从视频音频识别字幕（无需麦克风）
+    async function transcribeVideoAudio() {
+      const videoEl = document.getElementById('video-preview');
+      if (!videoEl.src) {
+        showToast('请先上传视频', 'warning');
+        return;
+      }
+
+      // 优先从 localStorage 读取，没有则从输入框读取
+      let config = JSON.parse(localStorage.getItem('linguaview_speech_config') || '{}');
+      if (!config.apiKey || !config.secretKey) {
+        const apiKeyInput = document.getElementById('speech-api-key');
+        const secretKeyInput = document.getElementById('speech-secret-key');
+        if (apiKeyInput && secretKeyInput && apiKeyInput.value.trim() && secretKeyInput.value.trim()) {
+          config = { apiKey: apiKeyInput.value.trim(), secretKey: secretKeyInput.value.trim() };
+          localStorage.setItem('linguaview_speech_config', JSON.stringify(config));
+        }
+      }
+      if (!config.apiKey || !config.secretKey) {
+        showToast('请先配置百度语音识别API（API Key + Secret Key），并点击保存', 'warning');
+        return;
+      }
+
+      // 清空旧字幕
+      subtitles = [];
+      document.getElementById('subtitle-list').innerHTML = '';
+
+      // 显示进度状态
+      document.getElementById('stt-status').style.display = 'block';
+      updateSTTStatus('正在获取API授权...', '');
+      document.querySelectorAll('#stt-btn, #stt-translate-btn').forEach(btn => {
+        btn.disabled = true; btn.style.opacity = '0.6';
+      });
+
+      // 1. 获取 access_token
+      const token = await getBaiduSpeechToken(config.apiKey, config.secretKey);
+      if (!token) {
+        showToast('获取授权失败，请检查API Key和Secret Key', 'error');
+        stopAutoTranscribe();
+        return;
+      }
+      showToast('授权成功，开始提取音频...', 'success');
+
+      // 2. 提取音频
+      updateSTTStatus('正在提取视频音频（静音播放中）...', '');
+      let audioBuffer;
+      try {
+        audioBuffer = await extractAudioFromVideo(videoEl);
+      } catch (e) {
+        showToast('音频提取失败: ' + e.message, 'error');
+        stopAutoTranscribe();
+        return;
+      }
+
+      if (!audioBuffer) {
+        showToast('音频提取失败', 'error');
+        stopAutoTranscribe();
+        return;
+      }
+
+      const totalDuration = audioBuffer.duration;
+      showToast(`音频提取成功（${totalDuration.toFixed(1)}秒），开始识别...`, 'success');
+
+      // 3. 分段识别（每段60秒，百度ASR单次最长60秒）
+      const chunkDuration = 55; // 留5秒余量
+      const totalChunks = Math.ceil(totalDuration / chunkDuration);
+
+      for (let i = 0; i < totalChunks; i++) {
+        const startTime = i * chunkDuration;
+        const endTime = Math.min((i + 1) * chunkDuration, totalDuration);
+
+        updateSTTStatus(`正在识别第 ${i + 1}/${totalChunks} 段`, `${subtitles.length} 句已识别`);
+
+        try {
+          // 提取PCM数据
+          const pcmBuffer = getPCMBlob(audioBuffer, startTime, endTime);
+          const base64Audio = arrayBufferToBase64(pcmBuffer);
+
+          // 发送到百度ASR
+          const result = await recognizeAudioChunk(base64Audio, pcmBuffer.byteLength, token);
+
+          if (result.success && result.text && result.text.trim()) {
+            // 百度ASR可能返回多句（用标点分隔）
+            const sentences = result.text.split(/[。！？.!?]/).filter(s => s.trim());
+            const sentenceCount = sentences.length || 1;
+
+            if (sentenceCount === 1) {
+              addSubtitleRow(
+                formatTimeSeconds(startTime),
+                formatTimeSeconds(endTime),
+                result.text.trim(),
+                ''
+              );
+            } else {
+              // 多句平均分配时间
+              const sentenceDuration = (endTime - startTime) / sentenceCount;
+              sentences.forEach((sentence, idx) => {
+                if (sentence.trim()) {
+                  addSubtitleRow(
+                    formatTimeSeconds(startTime + idx * sentenceDuration),
+                    formatTimeSeconds(startTime + (idx + 1) * sentenceDuration),
+                    sentence.trim(),
+                    ''
+                  );
+                }
+              });
+            }
+          }
+        } catch (e) {
+          console.warn(`第 ${i + 1} 段识别失败:`, e);
+        }
+
+        // 速率限制
+        await new Promise(r => setTimeout(r, 300));
+      }
+
+      // 4. 完成
+      stopAutoTranscribe();
+      showToast(`识别完成！共 ${subtitles.length} 句`, 'success');
+
+      if (subtitles.length === 0) {
+        showToast('未识别到语音，请检查视频是否有音频', 'warning');
+        return;
+      }
+
+      // 5. 自动翻译
+      if (autoTranslateAfterRecognize) {
+        autoTranslateAfterRecognize = false;
+        updateSTTStatus('正在自动翻译...', `${subtitles.length} 句`);
+        document.getElementById('stt-status').style.display = 'block';
+        setTimeout(async () => {
+          await autoTranslateWithBackend();
+          document.getElementById('stt-status').style.display = 'none';
+
+          // 6. 自动保存
+          if (autoSaveAfterRecognize) {
+            autoSaveAfterRecognize = false;
+            setTimeout(() => saveVideoAndSubtitles(), 1000);
+          }
+        }, 500);
+      }
+    }
+
+    function startAutoTranscribe() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        showToast('浏览器不支持语音识别，请使用 Chrome/Edge', 'error');
+        return;
+      }
+
+      const videoEl = document.getElementById('video-preview');
+      if (!videoEl || !videoEl.src) {
+        showToast('请先上传视频', 'warning');
+        return;
+      }
+
+      // 清空旧字幕
+      subtitles = [];
+      document.getElementById('subtitle-list').innerHTML = '';
+      recognizedSegments = [];
+
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      isRecognizing = true;
+      recognitionStartTime = videoEl.currentTime;
+
+      // 更新UI
+      document.getElementById('stt-status').style.display = 'block';
+      updateSTTStatus('正在识别中...', `${recognizedSegments.length} 句已识别`);
+
+      // 禁用按钮
+      document.querySelectorAll('#stt-btn, #stt-translate-btn').forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+      });
+
+      showToast('AI语音识别已启动，视频将自动播放', 'info');
+
+      // 自动播放视频
+      videoEl.play().catch(() => {
+        showToast('请手动点击播放视频', 'warning');
+      });
+
+      recognition.onresult = function(event) {
+        let interimText = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            const transcript = result[0].transcript.trim();
+            if (transcript) {
+              const videoEl2 = document.getElementById('video-preview');
+              const endTime = videoEl2.currentTime;
+              const startTime = recognizedSegments.length > 0
+                ? recognizedSegments[recognizedSegments.length - 1].end
+                : recognitionStartTime;
+
+              recognizedSegments.push({
+                start: startTime,
+                end: endTime,
+                text: transcript
+              });
+
+              // 实时添加字幕行
+              addSubtitleRow(
+                formatTimeSeconds(startTime),
+                formatTimeSeconds(endTime),
+                transcript,
+                ''
+              );
+
+              updateSTTStatus('正在识别中...', `${recognizedSegments.length} 句已识别`);
+            }
+          } else {
+            interimText += result[0].transcript;
+          }
+        }
+        if (interimText) {
+          updateSTTStatus(`识别中: "${interimText.substring(0, 30)}${interimText.length > 30 ? '...' : ''}"`, `${recognizedSegments.length} 句已识别`);
+        }
+      };
+
+      recognition.onerror = function(event) {
+        if (event.error === 'no-speech' || event.error === 'aborted') {
+          return; // 忽略这些错误
+        }
+        showToast(`识别错误: ${event.error}`, 'error');
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          stopAutoTranscribe();
+        }
+      };
+
+      recognition.onend = function() {
+        if (isRecognizing) {
+          // 视频还在播放就继续识别
+          const videoEl2 = document.getElementById('video-preview');
+          if (!videoEl2.paused && !videoEl2.ended) {
+            try { recognition.start(); } catch(e) {
+              setTimeout(() => { try { recognition.start(); } catch(e2) {} }, 100);
+            }
+          } else {
+            // 视频停止了，识别结束
+            finishRecognition();
+          }
+        }
+      };
+
+      // 监听视频结束
+      videoEl.onended = function() {
+        if (isRecognizing) {
+          finishRecognition();
+        }
+      };
+
+      try {
+        recognition.start();
+      } catch (e) {
+        showToast('启动识别失败: ' + e.message, 'error');
+        stopAutoTranscribe();
+      }
+    }
+
+    function finishRecognition() {
+      if (!isRecognizing) return;
+      stopAutoTranscribe();
+      showToast(`识别完成！共识别 ${recognizedSegments.length} 句`, 'success');
+
+      if (recognizedSegments.length === 0) {
+        showToast('未识别到任何语音，请检查视频是否有音频', 'warning');
+        return;
+      }
+
+      if (autoTranslateAfterRecognize) {
+        autoTranslateAfterRecognize = false;
+        setTimeout(() => autoTranslateWithBackend().then(() => {
+          if (autoSaveAfterRecognize) {
+            autoSaveAfterRecognize = false;
+            setTimeout(() => saveVideoAndSubtitles(), 1000);
+          }
+        }), 500);
+      }
+    }
+
+    function stopAutoTranscribe() {
+      isRecognizing = false;
+      if (recognition) {
+        try { recognition.stop(); } catch(e) {}
+        recognition = null;
+      }
+      document.getElementById('stt-status').style.display = 'none';
+      document.querySelectorAll('#stt-btn, #stt-translate-btn').forEach(btn => {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      });
+    }
+
+    function updateSTTStatus(message, progress) {
+      const msgEl = document.getElementById('stt-message');
+      const progEl = document.getElementById('stt-progress');
+      if (msgEl) msgEl.textContent = message;
+      if (progEl && progress) progEl.textContent = progress;
+    }
+
+    // 一键：识别 + 翻译 + 保存
+    async function recognizeAndTranslate() {
+      autoTranslateAfterRecognize = true;
+      autoSaveAfterRecognize = true;
+      transcribeVideoAudio();
+    }
+
+    function resetForm() {
+      if (!confirm('确定要重置表单吗？所有未保存的数据将丢失。')) return;
+      document.getElementById('video-title').value = '';
+      document.getElementById('video-category').value = '学习精选';
+      document.getElementById('video-tags').value = '';
+      document.getElementById('video-url').value = '';
+      document.getElementById('video-upload').value = '';
+      document.getElementById('subtitle-list').innerHTML = '';
+      subtitles = [];
+      currentVideoId = null;
+      document.getElementById('video-preview-container').style.display = 'none';
+      addSubtitleRow();
+      updatePreview();
+      showToast('表单已重置', 'success');
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const icons = {
+        success: 'fa-circle-check',
+        error: 'fa-circle-xmark',
+        warning: 'fa-triangle-exclamation',
+        info: 'fa-circle-info'
+      };
+      const icon = icons[type] || icons.success;
+      toast.innerHTML = `<i class="fa-solid ${icon}"></i><span>${message}</span>`;
+      toast.className = `toast ${type} show`;
+      // 重新触发动画
+      toast.style.animation = 'none';
+      void toast.offsetWidth;
+      toast.style.animation = '';
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+
+    loadBaiduConfig();
+    loadSpeechConfig();
+    addSubtitleRow();
+
+    function loadBaiduConfig() {
+      const config = JSON.parse(localStorage.getItem('linguaview_baidu_config') || '{}');
+      if (config.appid) document.getElementById('baidu-appid').value = config.appid;
+      if (config.appkey) document.getElementById('baidu-appkey').value = config.appkey;
+      updateBaiduConfigStatus(config);
+    }
+
+    function updateBaiduConfigStatus(config) {
+      const statusEl = document.getElementById('baidu-config-status');
+      if (!statusEl) return;
+      if (config.appid && config.appkey) {
+        statusEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> 已配置';
+        statusEl.style.background = 'rgba(34, 197, 94, 0.1)';
+        statusEl.style.color = '#22c55e';
+      } else {
+        statusEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> 未配置';
+        statusEl.style.background = 'rgba(239, 68, 68, 0.1)';
+        statusEl.style.color = '#ef4444';
+      }
+    }
+
+    function saveBaiduConfig() {
+      const appid = document.getElementById('baidu-appid').value.trim();
+      const appkey = document.getElementById('baidu-appkey').value.trim();
+      if (!appid || !appkey) {
+        showToast('请填写AppID和密钥后再保存', 'warning');
+        return;
+      }
+      const configObj = { appid, appkey };
+      try {
+        localStorage.setItem('linguaview_baidu_config', JSON.stringify(configObj));
+        // 立即验证保存是否成功
+        const saved = JSON.parse(localStorage.getItem('linguaview_baidu_config') || '{}');
+        if (saved.appid === appid && saved.appkey === appkey) {
+          showToast(`配置保存成功！AppID: ${appid.substring(0, 6)}...`, 'success');
+          updateBaiduConfigStatus(saved);
+        } else {
+          showToast('配置保存异常，请检查浏览器是否禁用了localStorage', 'error');
+        }
+      } catch (e) {
+        showToast('保存失败：' + e.message + '（可能是浏览器隐私模式）', 'error');
+      }
+    }
+
+    function md5(str) {
+      const md5Table = [
+        0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
+        0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be, 0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821,
+        0xf61e2562, 0xc040b340, 0x265e5a51, 0xe9b6c7aa, 0xd62f105d, 0x02441453, 0xd8a1e681, 0xe7d3fbc8,
+        0x21e1cde6, 0xc33707d6, 0xf4d50d87, 0x455a14ed, 0xa9e3e905, 0xfcefa3f8, 0x676f02d9, 0x8d2a4c8a,
+        0xfffa3942, 0x8771f681, 0x6d9d6122, 0xfde5380c, 0xa4beea44, 0x4bdecfa9, 0xf6bb4b60, 0xbebfbc70,
+        0x289b7ec6, 0xeaa127fa, 0xd4ef3085, 0x04881d05, 0xd9d4d039, 0xe6db99e5, 0x1fa27cf8, 0xc4ac5665,
+        0xf4292244, 0x432aff97, 0xab9423a7, 0xfc93a039, 0x655b59c3, 0x8f0ccc92, 0xffeff47d, 0x85845dd1,
+        0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1, 0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391
+      ];
+
+      const shiftAmounts = [
+        [7, 12, 17, 22], [5, 9, 14, 20], [4, 11, 16, 23], [6, 10, 15, 21]
+      ];
+
+      function leftRotate(value, amount) {
+        return (value << amount) | (value >>> (32 - amount));
+      }
+
+      str = unescape(encodeURIComponent(str));
+      let message = [];
+      for (let i = 0; i < str.length; i++) {
+        message.push(str.charCodeAt(i));
+      }
+
+      const originalBitLength = message.length * 8;
+      message.push(0x80);
+
+      while ((message.length * 8) % 512 !== 448) {
+        message.push(0);
+      }
+
+      for (let i = 0; i < 8; i++) {
+        message.push((originalBitLength >>> (8 * (7 - i))) & 0xff);
+      }
+
+      let a = 0x67452301;
+      let b = 0xefcdab89;
+      let c = 0x98badcfe;
+      let d = 0x10325476;
+
+      for (let chunk = 0; chunk < message.length; chunk += 64) {
+        const words = [];
+        for (let i = 0; i < 16; i++) {
+          words[i] = (message[chunk + i * 4] << 24) |
+                     (message[chunk + i * 4 + 1] << 16) |
+                     (message[chunk + i * 4 + 2] << 8) |
+                     message[chunk + i * 4 + 3];
+        }
+
+        let aa = a, bb = b, cc = c, dd = d;
+
+        for (let i = 0; i < 64; i++) {
+          let f, g;
+          const round = Math.floor(i / 16);
+
+          if (round === 0) {
+            f = (b & c) | (~b & d);
+            g = i;
+          } else if (round === 1) {
+            f = (d & b) | (~d & c);
+            g = (5 * i + 1) % 16;
+          } else if (round === 2) {
+            f = b ^ c ^ d;
+            g = (3 * i + 5) % 16;
+          } else {
+            f = c ^ (b | ~d);
+            g = (7 * i) % 16;
+          }
+
+          const temp = d;
+          d = c;
+          c = b;
+          b = b + leftRotate(a + f + md5Table[i] + words[g], shiftAmounts[round][i % 4]);
+          a = temp;
+        }
+
+        a += aa;
+        b += bb;
+        c += cc;
+        d += dd;
+      }
+
+      function toHex(value) {
+        let hex = '';
+        for (let i = 0; i < 4; i++) {
+          hex += ((value >>> (8 * i)) & 0xff).toString(16).padStart(2, '0');
+        }
+        return hex;
+      }
+
+      return (toHex(a) + toHex(b) + toHex(c) + toHex(d)).toLowerCase();
+    }
+
+    let currentVideoId = null;
+
+    async function baiduTranslate(text, appid, appkey) {
+      const salt = Math.floor(32768 + Math.random() * (65536 - 32768)).toString();
+      const signInput = appid + text + salt + appkey;
+      const sign = md5(signInput);
+
+      const params = new URLSearchParams({
+        q: text,
+        from: 'en',
+        to: 'zh',
+        appid: appid,
+        salt: salt,
+        sign: sign
+      });
+
+      const proxies = [
+        'https://api.allorigins.win/raw?url=',
+        'https://api.codetabs.com/v1/proxy?quest=',
+        'https://corsproxy.io/?'
+      ];
+
+      for (const proxy of proxies) {
+        try {
+          const url = proxy + encodeURIComponent('https://fanyi-api.baidu.com/api/trans/vip/translate?' + params.toString());
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            timeout: 15000
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            
+            if (result.error_code) {
+              return { error: result.error_code, message: result.error_msg };
+            }
+            
+            if (result.trans_result && result.trans_result[0]) {
+              return { chinese: result.trans_result[0].dst };
+            }
+          }
+        } catch (error) {
+          console.log(`代理 ${proxy} 失败，尝试下一个...`);
+        }
+      }
+
+      return { error: 'network', message: '所有代理均失败' };
+    }
+
+    async function autoTranslateWithBackend() {
+      // 优先从 localStorage 读取，没有则从输入框读取
+      let config = JSON.parse(localStorage.getItem('linguaview_baidu_config') || '{}');
+      if (!config.appid || !config.appkey) {
+        const appidInput = document.getElementById('baidu-appid');
+        const appkeyInput = document.getElementById('baidu-appkey');
+        if (appidInput && appkeyInput && appidInput.value.trim() && appkeyInput.value.trim()) {
+          config = { appid: appidInput.value.trim(), appkey: appkeyInput.value.trim() };
+          // 自动保存到 localStorage
+          localStorage.setItem('linguaview_baidu_config', JSON.stringify(config));
+        }
+      }
+      if (!config.appid || !config.appkey) {
+        showToast('请先配置百度翻译API（AppID + Key），并点击保存', 'warning');
+        return;
+      }
+
+      const texts = subtitles.filter(s => s.english.trim() && !s.chinese.trim());
+      
+      if (texts.length === 0) {
+        showToast('没有需要翻译的字幕', 'info');
+        return;
+      }
+
+      showToast(`正在翻译 ${texts.length} 条字幕...`, 'info');
+
+      let successCount = 0;
+      let failCount = 0;
+
+      for (let i = 0; i < texts.length; i++) {
+        const sub = texts[i];
+        const result = await baiduTranslate(sub.english, config.appid, config.appkey);
+
+        if (result.chinese) {
+          sub.chinese = result.chinese;
+          successCount++;
+          
+          const row = document.querySelector(`.subtitle-row[data-id="${sub.id}"]`);
+          if (row) {
+            row.querySelector('.text-input:nth-child(5)').value = sub.chinese;
+          }
+        } else if (result.error) {
+          failCount++;
+          console.error(`翻译失败: ${sub.english} - ${result.error}: ${result.message}`);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      updatePreview();
+      if (failCount === 0) {
+        showToast(`翻译完成：全部成功 ${successCount}/${texts.length} 条`, 'success');
+      } else if (successCount > 0) {
+        showToast(`翻译完成：成功 ${successCount} 条，失败 ${failCount} 条`, 'warning');
+      } else {
+        showToast(`翻译失败：${failCount} 条全部失败，请检查API配置`, 'error');
+      }
+    }
+
+    async function testBaiduAPI() {
+      const appid = document.getElementById('baidu-appid').value.trim();
+      const appkey = document.getElementById('baidu-appkey').value.trim();
+
+      if (!appid || !appkey) {
+        showToast('请填写AppID和密钥', 'warning');
+        return;
+      }
+
+      showToast('正在测试连接...', 'info');
+      const testBtn = document.querySelector('button[onclick="testBaiduAPI()"]');
+      if (testBtn) { testBtn.disabled = true; testBtn.style.opacity = '0.6'; }
+
+      const result = await baiduTranslate('Hello world', appid, appkey);
+
+      if (testBtn) { testBtn.disabled = false; testBtn.style.opacity = '1'; }
+
+      // 无论测试是否成功，都保存配置（避免测试失败导致配置丢失）
+      const configObj = { appid, appkey };
+      localStorage.setItem('linguaview_baidu_config', JSON.stringify(configObj));
+      updateBaiduConfigStatus(configObj);
+
+      if (result.chinese) {
+        showToast(`API测试成功！翻译结果：${result.chinese}（配置已保存）`, 'success');
+      } else {
+        let errorMsg = 'API测试失败（配置已保存，翻译时仍会使用此配置）';
+        if (result.error === '52001' || result.error === '54001') {
+          errorMsg = '签名错误，请检查AppID和密钥是否正确';
+        } else if (result.error === '52003') {
+          errorMsg = '未授权用户，请检查AppID是否已认证';
+        } else if (result.error === '54003') {
+          errorMsg = '访问频率受限';
+        } else if (result.error === 'network') {
+          errorMsg = '网络或CORS限制导致测试失败，但配置已保存。实际翻译时可能仍可正常工作';
+        } else if (result.message) {
+          errorMsg = result.message;
+        }
+        showToast(errorMsg, 'warning');
+      }
+    }
+
+    async function translateSingleSubtitle(id) {
+      // 优先从 localStorage 读取，没有则从输入框读取
+      let config = JSON.parse(localStorage.getItem('linguaview_baidu_config') || '{}');
+      if (!config.appid || !config.appkey) {
+        const appidInput = document.getElementById('baidu-appid');
+        const appkeyInput = document.getElementById('baidu-appkey');
+        if (appidInput && appkeyInput && appidInput.value.trim() && appkeyInput.value.trim()) {
+          config = { appid: appidInput.value.trim(), appkey: appkeyInput.value.trim() };
+          localStorage.setItem('linguaview_baidu_config', JSON.stringify(config));
+        }
+      }
+      if (!config.appid || !config.appkey) {
+        showToast('请先配置百度翻译API（AppID + Key），并点击保存', 'warning');
+        return;
+      }
+
+      const sub = subtitles.find(s => s.id === id);
+      if (!sub || !sub.english.trim()) {
+        showToast('请先输入英文内容', 'warning');
+        return;
+      }
+
+      showToast('正在翻译...', 'info');
+      const result = await baiduTranslate(sub.english, config.appid, config.appkey);
+
+      if (result.chinese) {
+        sub.chinese = result.chinese;
+        const row = document.querySelector(`.subtitle-row[data-id="${id}"]`);
+        if (row) {
+          row.querySelector('.text-input:nth-child(5)').value = sub.chinese;
+        }
+        updatePreview();
+        showToast('翻译成功！', 'success');
+      } else {
+        showToast(`翻译失败: ${result.message || '未知错误'}`, 'error');
+      }
+    }
+
+    function formatTimeSeconds(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = Math.floor(seconds % 60);
+      const ms = Math.floor((seconds % 1) * 1000);
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')},${ms.toString().padStart(3, '0')}`;
+    }
+  </script>
+
+  <script>
+    // ===== 管理入口访问保护（MVP） =====
+    // 注意：前端口令只能挡住普通访客，不能替代真正的后端鉴权。
+    // 正式部署时请改为后端会话 / Token 校验，并且不要把口令或 API 密钥写在前端。
+    const ADMIN_KEY = 'linguaview-admin';
+
+    function applyAdminGate() {
+      const gate = document.getElementById('adminGate');
+      if (!gate) return;
+      if (sessionStorage.getItem('lv_admin_ok') === '1') {
+        gate.remove();
+      }
+    }
+
+    function tryAdminLogin() {
+      const input = document.getElementById('adminKeyInput');
+      const msg = document.getElementById('adminGateMsg');
+      if (!input) return;
+      if (input.value === ADMIN_KEY) {
+        sessionStorage.setItem('lv_admin_ok', '1');
+        const gate = document.getElementById('adminGate');
+        if (gate) gate.remove();
+      } else {
+        if (msg) msg.textContent = '口令不正确';
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', applyAdminGate);
+    document.addEventListener('DOMContentLoaded', function () {
+      const input = document.getElementById('adminKeyInput');
+      if (input) {
+        input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') tryAdminLogin();
+        });
+      }
+    });
+  </script>
+</body>
+</html>

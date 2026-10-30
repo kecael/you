@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinguaView - 沉浸式英语学习</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="js/theme.js"></script>
+  <style>
+    /* Level Section Styles */
+    .levels-section { padding: 60px 0; }
+
+    .levels-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    .level-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .level-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .level-header {
+      padding: 24px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .level-header::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+    }
+
+    .level-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .level-name {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .level-vocab {
+      font-size: 14px;
+      opacity: 0.9;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .level-body {
+      padding: 20px 24px;
+    }
+
+    .level-goal {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: rgba(59, 130, 246, 0.05);
+      border-radius: 8px;
+      border-left: 3px solid var(--accent-blue);
+    }
+
+    .level-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 10px;
+      background: rgba(59, 130, 246, 0.05);
+      border-radius: 8px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .level-topics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .topic-tag {
+      padding: 4px 10px;
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-blue);
+      border-radius: 12px;
+      font-size: 12px;
+    }
+
+    .level-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .level-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    .level-btn-primary {
+      background: var(--gradient, linear-gradient(135deg, #3b82f6, #2563eb));
+      color: white;
+    }
+
+    .level-btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+
+    .level-btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .level-btn-secondary:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .difficulty-stars {
+      display: flex;
+      gap: 2px;
+    }
+
+    .difficulty-stars i {
+      font-size: 12px;
+    }
+
+    .level-features-list {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .level-feature-item {
+      font-size: 13px;
+      color: var(--text-secondary);
+      padding: 6px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .level-feature-item i {
+      color: var(--accent-blue);
+      margin-top: 3px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', 'Noto Sans SC', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      z-index: -1;
+      filter: blur(80px);
+      opacity: var(--blob-opacity);
+    }
+
+    body::before {
+      width: 600px;
+      height: 600px;
+      background: linear-gradient(135deg, var(--gradient-start), var(--accent-blue));
+      top: -200px;
+      right: -100px;
+    }
+
+    body::after {
+      width: 500px;
+      height: 500px;
+      background: linear-gradient(135deg, var(--accent-blue), #06b6d4);
+      bottom: -150px;
+      left: -100px;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: var(--navbar-bg);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 24px;
+      transition: all 0.3s ease;
+    }
+
+    .navbar.scrolled {
+      background: var(--navbar-bg-scrolled);
+      box-shadow: 0 2px 20px var(--navbar-shadow);
+    }
+
+    .navbar-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-decoration: none;
+    }
+
+    .navbar-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .navbar-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .navbar-links a:hover {
+      color: var(--accent-blue);
+    }
+
+    .navbar-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent-blue);
+      transition: width 0.3s ease;
+    }
+
+    .navbar-links a:hover::after {
+      width: 100%;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    .hero { padding: 140px 0 80px; text-align: center; }
+
+    .hero-title {
+      font-size: clamp(3rem, 8vw, 5rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 20px;
+      letter-spacing: -2px;
+      animation: fadeInDown 0.6s ease-out;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--text-secondary);
+      font-weight: 400;
+      max-width: 500px;
+      margin: 0 auto 40px;
+      animation: fadeInUp 0.6s ease-out 0.2s both;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.6s ease-out 0.4s both;
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .btn {
+      padding: 14px 32px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #2563eb 100%);
+      color: #ffffff;
+      padding: 16px 36px;
+      font-size: 16px;
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(59, 130, 246, 0.5); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--primary-color);
+      border: 2px solid var(--primary-color);
+    }
+
+    .btn-secondary:hover { transform: translateY(-2px); background: rgba(59, 130, 246, 0.08); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15); }
+
+    .sponsor-banner {
+      background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+      box-shadow: 0 10px 30px rgba(30, 27, 75, 0.3);
+    }
+
+    .sponsor-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sponsor-text span {
+      background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .sponsor-badge { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 80px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 28px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-md);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .feature-card:hover::before {
+      left: 100%;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: var(--shadow-lg), 0 12px 32px rgba(59, 130, 246, 0.18);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      font-size: 22px;
+    }
+
+    .feature-icon.video { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
+    .feature-icon.script { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; }
+    .feature-icon.vocab { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+    .feature-icon.mode { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+
+    .feature-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary); }
+
+    .feature-list { list-style: none; padding: 0; }
+
+    .feature-list li {
+      font-size: 13px;
+      color: var(--text-secondary);
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature-list li::before {
+      content: '';
+      width: 4px;
+      height: 4px;
+      background: var(--accent-blue);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .video-section { padding: 60px 0; }
+
+    .section-header { text-align: center; margin-bottom: 48px; }
+
+    .section-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .section-subtitle { color: var(--text-secondary); font-size: 1rem; }
+
+    .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+
+    .video-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+    }
+
+    .video-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+    .video-thumbnail {
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .video-thumbnail .play-icon {
+      width: 56px;
+      height: 56px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .video-thumbnail:hover .play-icon { transform: scale(1.1); background: var(--bg-card); }
+
+    .video-thumbnail .play-icon i { color: var(--accent-blue); font-size: 24px; margin-left: 4px; }
+
+    .video-info { padding: 20px; }
+
+    .video-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
+
+    .video-meta { display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+
+    .video-meta span { display: flex; align-items: center; gap: 4px; }
+
+    .video-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .video-tag {
+      padding: 4px 10px;
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-blue);
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .video-action { margin-top: 16px; }
+
+    .footer {
+      background: var(--bg-card);
+      padding: 40px 0;
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* ===== 单一学习主流程 ===== */
+    .flow-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 56px;
+    }
+
+    .flow-step {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 22px 20px;
+      position: relative;
+    }
+
+    .flow-step-num {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .flow-step-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; color: var(--text-primary); }
+
+    .flow-step-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+    .flow-honest {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: -36px 0 56px;
+      line-height: 1.7;
+      padding: 0 12px;
+    }
+
+    .empty-hint {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 56px 20px;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      border: 1px dashed var(--border-color);
+      border-radius: var(--radius);
+    }
+
+    .empty-hint i { font-size: 40px; margin-bottom: 12px; display: block; color: var(--text-muted); }
+
+    @media (max-width: 768px) {
+      .navbar-links { display: none; }
+      .hero { padding: 60px 0 50px; }
+      .flow-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .flow-step { padding: 16px; }
+      .flow-step-title { font-size: 14px; }
+      .flow-step-desc { font-size: 12px; }
+      .hero-title { font-size: 2.5rem; letter-spacing: -1px; }
+      .sponsor-banner { flex-direction: column; text-align: center; }
+      .features { grid-template-columns: 1fr; }
+      .video-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" id="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-brand">
+        <svg class="brand-logo" style="flex-shrink:0; filter:drop-shadow(0 2px 6px rgba(59,130,246,0.3));" viewBox="0 0 36 36" width="28" height="28" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lv-grad" x1="0" y1="0" x2="36" y2="36"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs><path d="M3 7a3 3 0 0 1 3-3h24a3 3 0 0 1 3 3v16a3 3 0 0 1-3 3H17l-7 5v-5H6a3 3 0 0 1-3-3V7z" fill="url(#lv-grad)"/><rect x="11" y="12" width="3" height="11" rx="1.2" fill="white"/><rect x="11" y="19.5" width="9" height="3" rx="1.2" fill="white"/><circle cx="24" cy="13" r="2.2" fill="white"/></svg>LinguaView
+      </a>
+      <ul class="navbar-links">
+        <li><a href="#start">开始学习</a></li>
+        <li><a href="catalog.html">学习目录</a></li>
+        <li><a href="learn.html">精听练习</a></li>
+        <li><a href="使用指南.html">使用指南</a></li>
+      </ul>
+      <button class="theme-toggle" onclick="toggleTheme()" title="切换深色模式">
+        <i class="fa-solid fa-moon"></i>
+        <i class="fa-solid fa-sun"></i>
+      </button>
+      <button class="hamburger" onclick="toggleMobileMenu()" title="菜单">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#start">开始学习</a>
+    <a href="catalog.html">学习目录</a>
+    <a href="learn.html">精听练习</a>
+    <a href="使用指南.html">使用指南</a>
+  </div>
+
+  <div class="container">
+    <section class="hero">
+      <h1 class="hero-title">LinguaView</h1>
+      <p class="hero-subtitle">用真实视频练精听：逐句字幕、点击跳转、重点词句解析，一段视频就是一个学习单元。</p>
+      <div class="hero-buttons">
+        <a href="#start" class="btn btn-primary">
+          <i class="fa-solid fa-play"></i>开始学习
+        </a>
+        <a href="catalog.html" class="btn btn-secondary">
+          <i class="fa-solid fa-list-check"></i>按目标选课
+        </a>
+      </div>
+    </section>
+
+    <section id="start">
+      <div class="section-header">
+        <h2 class="section-title">学习怎么开始</h2>
+        <p class="section-subtitle">只有一条主流程，按顺序做完这四步即可</p>
+      </div>
+      <div class="flow-grid">
+        <div class="flow-step">
+          <div class="flow-step-num">1</div>
+          <div class="flow-step-title">测水平 / 选目标</div>
+          <div class="flow-step-desc">在「学习目录」按 CEFR 等级或零基础、四六级、考研、雅思托福、职场等目标选择起点。</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">2</div>
+          <div class="flow-step-title">推荐一节课</div>
+          <div class="flow-step-desc">选定等级后，系统列出该等级下的示例课程，每节课都标注难度与字幕句数。</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">3</div>
+          <div class="flow-step-title">听 · 看字幕 · 练习</div>
+          <div class="flow-step-desc">进入精听页：逐句播放、点字幕跳转、查看重点词句，再用听写、挖空、中译英练习。</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">4</div>
+          <div class="flow-step-title">查看进度</div>
+          <div class="flow-step-desc">页面底部实时显示本节正确/错误/总句数，用于回看薄弱句子。</div>
+        </div>
+      </div>
+      <p class="flow-honest">
+        当前为演示版本：示例课程用于展示学习流程，正式课程与云端学习进度正在准备中。
+      </p>
+    </section>
+
+    <section class="features" id="features">
+      <div class="feature-card">
+        <div class="feature-icon video">
+          <i class="fa-solid fa-closed-captioning"></i>
+        </div>
+        <h3 class="feature-title">逐句精听</h3>
+        <ul class="feature-list">
+          <li>中英双语字幕与播放进度同步</li>
+          <li>点击任意一句跳转到对应时间点</li>
+          <li>单句循环，反复听清发音</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon vocab">
+          <i class="fa-solid fa-book-open"></i>
+        </div>
+        <h3 class="feature-title">重点词句解析</h3>
+        <ul class="feature-list">
+          <li>每句标注重点词与音标释义</li>
+          <li>例句示范实际用法</li>
+          <li>随播放进度自动切换解析</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon mode">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </div>
+        <h3 class="feature-title">练习模式</h3>
+        <ul class="feature-list">
+          <li>听写整句，检验听辨能力</li>
+          <li>挖空填词，巩固关键词</li>
+          <li>中译英，训练输出表达</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="levels-section" id="levels">
+      <div class="section-header">
+        <h2 class="section-title">英语学习等级体系</h2>
+        <p class="section-subtitle">按 CEFR 国际标准分级，从零基础到高级表达，选择适合你的起点</p>
+      </div>
+      <div class="levels-container" id="levelsContainer">
+      </div>
+    </section>
+
+    <section class="video-section" id="videos">
+      <div class="section-header">
+        <h2 class="section-title">示例课程</h2>
+        <p class="section-subtitle">以下为演示学习流程的示例课程，均带双语字幕；正式课程陆续上线</p>
+      </div>
+      <div class="video-grid" id="videoGrid">
+      </div>
+    </section>
+  </div>
+
+  <footer class="footer">
+    <p><span style="font-weight: 600; color: var(--text-primary);">LinguaView</span> · 英语视频精听学习工具</p>
+    <p style="margin-top: 10px; font-size: 13px;" class="footer-links">
+      <a href="使用指南.html">使用指南</a> ·
+      <a href="声明.html">来源与版权</a> ·
+      <a href="声明.html#privacy">隐私说明</a> ·
+      <a href="admin.html" style="color: var(--text-muted);">管理员入口</a>
+    </p>
+  </footer>
+
+  <script src="js/vocab_a1.js"></script>
+  <script src="js/vocab_a2.js"></script>
+  <script src="js/vocab_b1.js"></script>
+  <script src="js/vocab_b2.js"></script>
+  <script src="js/vocab_c1.js"></script>
+  <script src="js/levels.js"></script>
+  <script>
+    function renderLevels() {
+      const container = document.getElementById('levelsContainer');
+      const levels = window.learningLevels || [];
+      container.innerHTML = levels.map(level => {
+        const wordCount = level.vocabulary.wordList ? level.vocabulary.wordList.length : 0;
+        const difficultyStars = '★'.repeat(level.difficulty) + '☆'.repeat(5 - level.difficulty);
+        
+        const countStr = level.vocabulary.count;
+        let progressLabel = '';
+        let progressPercent = 0;
+        const numericPart = parseInt(countStr.replace(/[^0-9]/g, '')) || 100;
+        progressPercent = Math.min(100, Math.round((wordCount / numericPart) * 100));
+        progressLabel = `已收录 ${wordCount} 词 / 目标 ${countStr} 词`;
+        
+        return `
+        <div class="level-card" style="--gradient: ${level.gradient};">
+          <div class="level-header" style="background: ${level.gradient};">
+            <div class="level-badge">
+              <i class="fa-solid ${level.icon}"></i>
+              <span>等级 ${level.level}</span>
+            </div>
+            <h3 class="level-name">${level.name}</h3>
+            <div class="level-vocab">
+              <i class="fa-solid fa-book"></i>
+              <span>${level.vocabulary.count} ${level.vocabulary.unit}核心词汇</span>
+            </div>
+            <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px; font-size: 12px;">
+              <span style="opacity: 0.9;">词汇难度：</span>
+              <span style="letter-spacing: 2px;">${difficultyStars}</span>
+              <span style="opacity: 0.8;">${level.difficulty}/5</span>
+            </div>
+            <div style="margin-top: 8px; background: rgba(255,255,255,0.2); border-radius: 10px; height: 6px; overflow: hidden;">
+              <div style="height: 100%; width: ${progressPercent}%; background: rgba(255,255,255,0.8); border-radius: 10px; transition: width 0.5s;"></div>
+            </div>
+            <div style="margin-top: 6px; font-size: 11px; opacity: 0.9;">${progressLabel}</div>
+          </div>
+          <div class="level-body">
+            <div class="level-goal">
+              <i class="fa-solid fa-bullseye" style="color: ${level.color}; margin-right: 6px;"></i>
+              ${level.goal}
+            </div>
+            <div class="level-stats">
+              <div class="stat-item">
+                <div class="stat-value">${level.vocabulary.count}</div>
+                <div class="stat-label">词汇量</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${level.vocabulary.topics.length}</div>
+                <div class="stat-label">主题</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${level.sampleVideos.length}</div>
+                <div class="stat-label">示例视频</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${level.sampleVideos.reduce((sum, v) => sum + (v.subtitles ? v.subtitles.length : 0), 0)}</div>
+                <div class="stat-label">精听句子</div>
+              </div>
+            </div>
+            <div class="level-topics">
+              ${level.vocabulary.topics.map(topic => `<span class="topic-tag">${topic}</span>`).join('')}
+            </div>
+            <div class="level-features-list">
+              <div class="level-feature-item">
+                <i class="fa-solid fa-check-circle"></i>
+                <span><strong>📝 语法：</strong>${level.content.grammar.substring(0, 35)}...</span>
+              </div>
+              <div class="level-feature-item">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span><strong>💡 方法：</strong>${level.method.steps[0].substring(0, 30)}...</span>
+              </div>
+              <div class="level-feature-item">
+                <i class="fa-solid fa-star"></i>
+                <span><strong>🎯 技能：</strong>${level.content.skills.substring(0, 35)}...</span>
+              </div>
+            </div>
+            <div class="level-actions" style="margin-top: 16px;">
+              <a href="catalog.html?level=${level.id}" class="level-btn level-btn-primary" style="background: ${level.gradient};">
+                <i class="fa-solid fa-play"></i>开始学习
+              </a>
+              <button class="level-btn level-btn-secondary" onclick="showLevelDetail('${level.id}')">
+                <i class="fa-solid fa-info"></i>详情
+              </button>
+            </div>
+          </div>
+        </div>
+      `}).join('');
+    }
+
+    // 从音标中提取元音音标
+    function extractVowels(phonetic) {
+      if (!phonetic) return '';
+      const vowelPattern = /iː|ɪ|e|æ|ʌ|ɜː|ə|uː|ʊ|ɔː|ɒ|ɑː|eɪ|aɪ|ɔɪ|aʊ|əʊ|ɪə|eə|ʊə/g;
+      const matches = phonetic.match(vowelPattern);
+      if (!matches || matches.length === 0) return '-';
+      return [...new Set(matches)].join(', ');
+    }
+
+    function showLevelDetail(levelId) {
+      const level = window.getLevelById(levelId);
+      if (!level) return;
+      const modal = document.createElement('div');
+      const wordListHtml = level.vocabulary.wordList.slice(0, 10).map(w => {
+        const vowel = w.vowel || extractVowels(w.phonetic);
+        return `
+          <div style="display: inline-flex; align-items: center; gap: 3px; margin: 3px; padding: 6px 10px; background: ${level.color}08; border: 1px solid ${level.color}20; border-radius: 8px; font-size: 12px;">
+            <strong style="color: ${level.color};">${w.word}</strong>
+            <span style="color: var(--text-secondary); font-size: 10px; opacity: 0.7;">${w.phonetic || ''}</span>
+            <span style="color: #e74c3c; font-size: 10px; font-weight: 600;">${vowel}</span>
+            <span style="color: var(--text-secondary); font-size: 11px; opacity: 0.8;">${w.meaning}</span>
+          </div>
+        `;
+      }).join('');
+      const moreWordsCount = level.vocabulary.wordList.length - 10;
+      
+      const stepsHtml = level.method.steps.map((step, i) => 
+        `<li style="padding: 8px 0; display: flex; align-items: flex-start; gap: 8px;">
+          <span style="background: ${level.color}; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;">${i+1}</span>
+          <span style="color: var(--text-secondary); font-size: 14px;">${step}</span>
+        </li>`
+      ).join('');
+      const resourcesHtml = level.method.resources.map(r => 
+        `<span style="padding: 4px 12px; background: rgba(59,130,246,0.1); color: var(--accent-blue); border-radius: 12px; font-size: 12px; margin: 4px;">${r}</span>`
+      ).join('');
+      const videoListHtml = level.sampleVideos.map(v => 
+        `<div style="padding: 10px; background: var(--bg-input); border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <strong style="font-size: 13px;">${v.title}</strong>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
+              ${v.duration} · ${v.difficulty} · ${v.subtitles ? v.subtitles.length + ' 句字幕' : '无字幕'}
+            </div>
+          </div>
+          <a href="learn.html?videoId=${v.id}&levelId=${level.id}" style="padding: 6px 14px; background: ${level.gradient}; color: white; border-radius: 8px; font-size: 11px; text-decoration: none; white-space: nowrap;">
+            <i class="fa-solid fa-play"></i> 学习
+          </a>
+        </div>`
+      ).join('');
+      
+      modal.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5); z-index: 2000;
+        display: flex; align-items: center; justify-content: center;
+        padding: 20px; animation: fadeIn 0.3s;
+      `;
+      modal.innerHTML = `
+        <div style="background: var(--bg-card); border-radius: 16px; max-width: 750px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+          <div style="background: ${level.gradient}; padding: 24px; color: white; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1;">
+            <div>
+              <div style="opacity: 0.9; font-size: 13px; margin-bottom: 4px;">等级 ${level.level} · 难度 ${level.difficulty}/5</div>
+              <h2 style="font-size: 24px; font-weight: 700;">${level.name}</h2>
+            </div>
+            <button onclick="this.closest('[style]').remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 18px;">×</button>
+          </div>
+          <div style="padding: 24px;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
+              <div style="text-align: center; padding: 14px 8px; background: rgba(59,130,246,0.05); border-radius: 12px;">
+                <div style="font-size: 22px; font-weight: 700; color: ${level.color};">${level.vocabulary.count}</div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">核心词汇</div>
+              </div>
+              <div style="text-align: center; padding: 14px 8px; background: rgba(59,130,246,0.05); border-radius: 12px;">
+                <div style="font-size: 22px; font-weight: 700; color: ${level.color};">${level.difficulty}/5</div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">难度等级</div>
+              </div>
+              <div style="text-align: center; padding: 14px 8px; background: rgba(59,130,246,0.05); border-radius: 12px;">
+                <div style="font-size: 22px; font-weight: 700; color: ${level.color};">${level.sampleVideos.length}</div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">学习视频</div>
+              </div>
+              <div style="text-align: center; padding: 14px 8px; background: rgba(59,130,246,0.05); border-radius: 12px;">
+                <div style="font-size: 22px; font-weight: 700; color: ${level.color};">${level.vocabulary.wordList.length}</div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">词汇收录</div>
+              </div>
+            </div>
+            <div style="margin-bottom: 20px;">
+              <h4 style="font-size: 15px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-bullseye" style="color: ${level.color};"></i> 学习目标
+              </h4>
+              <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; padding: 12px; background: rgba(59,130,246,0.05); border-radius: 8px;">${level.goal}</p>
+            </div>
+            <div style="margin-bottom: 20px;">
+              <h4 style="font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-book-open" style="color: ${level.color};"></i> 学习内容
+              </h4>
+              <div style="display: grid; gap: 10px;">
+                <div style="padding: 12px; background: var(--bg-input); border-radius: 8px;">
+                  <strong style="color: ${level.color}; font-size: 13px;">🎵 语音：</strong>
+                  <span style="color: var(--text-secondary); font-size: 13px; margin-left: 8px;">${level.content.phonetics}</span>
+                </div>
+                <div style="padding: 12px; background: var(--bg-input); border-radius: 8px;">
+                  <strong style="color: ${level.color}; font-size: 13px;">📚 词汇：</strong>
+                  <span style="color: var(--text-secondary); font-size: 13px; margin-left: 8px;">${level.content.vocabulary}</span>
+                </div>
+                <div style="padding: 12px; background: var(--bg-input); border-radius: 8px;">
+                  <strong style="color: ${level.color}; font-size: 13px;">📝 语法：</strong>
+                  <span style="color: var(--text-secondary); font-size: 13px; margin-left: 8px;">${level.content.grammar}</span>
+                </div>
+                <div style="padding: 12px; background: var(--bg-input); border-radius: 8px;">
+                  <strong style="color: ${level.color}; font-size: 13px;">🎯 技能：</strong>
+                  <span style="color: var(--text-secondary); font-size: 13px; margin-left: 8px;">${level.content.skills}</span>
+                </div>
+              </div>
+            </div>
+            <div style="margin-bottom: 20px;">
+              <h4 style="font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-list-check" style="color: ${level.color};"></i> 核心词汇预览
+              </h4>
+              <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                ${wordListHtml}
+                ${moreWordsCount > 0 ? `<span style="display: inline-flex; align-items: center; padding: 4px 10px; background: var(--bg-input); color: var(--text-secondary); border-radius: 12px; font-size: 12px;">+${moreWordsCount} 更多</span>` : ''}
+              </div>
+            </div>
+            <div style="margin-bottom: 20px;">
+              <h4 style="font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-lightbulb" style="color: ${level.color};"></i> 学习方法
+              </h4>
+              <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 12px;">${level.method.description}</p>
+              <ul style="list-style: none; padding: 0;">${stepsHtml}</ul>
+            </div>
+            <div style="margin-bottom: 20px;">
+              <h4 style="font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-play-circle" style="color: ${level.color};"></i> 示例视频
+              </h4>
+              ${videoListHtml}
+            </div>
+            <div style="margin-bottom: 20px;">
+              <h4 style="font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-link" style="color: ${level.color};"></i> 推荐资源
+              </h4>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">${resourcesHtml}</div>
+            </div>
+            <div style="text-align: center; padding-top: 16px; border-top: 1px solid var(--border-color);">
+              <a href="catalog.html?level=${level.id}" style="display: inline-block; padding: 14px 40px; background: ${level.gradient}; color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; text-decoration: none;">
+                <i class="fa-solid fa-play" style="margin-right: 8px;"></i>进入学习
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+      });
+      document.body.appendChild(modal);
+    }
+
+    renderLevels();
+
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast-notification ${type}`;
+      const icons = {
+        success: 'fa-circle-check',
+        error: 'fa-circle-xmark',
+        warning: 'fa-triangle-exclamation',
+        info: 'fa-circle-info'
+      };
+      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i><span>${message}</span>`;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    window.addEventListener('scroll', () => {
+      const navbar = document.getElementById('navbar');
+      if (window.scrollY > 50) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+
+    // 示例课程：只展示真实带双语字幕的示例内容，不虚构播放量与不可播放的视频
+    // 状态：有视频源 → 「含视频」；只有字幕 → 「字幕练习」
+    function courseHasVideo(course) {
+      return !!(course && (course.videoUrl || course.sourceId));
+    }
+
+    function buildSampleCourses() {
+      const levels = window.learningLevels || [];
+      const courses = [];
+      levels.forEach(level => {
+        (level.sampleVideos || []).forEach(v => {
+          const subs = v.subtitles || [];
+          if (subs.length === 0) return;
+          courses.push({
+            id: v.id,
+            title: v.title,
+            levelId: level.id,
+            levelName: level.name,
+            levelColor: level.color,
+            duration: v.duration || '',
+            sentenceCount: subs.length,
+            videoUrl: v.videoUrl || '',
+            sourceId: v.sourceId || null,
+            tags: v.tags || []
+          });
+        });
+      });
+      return courses;
+    }
+
+    function renderVideoGrid() {
+      const grid = document.getElementById('videoGrid');
+      if (!grid) return;
+      const courses = buildSampleCourses().slice(0, 6);
+
+      if (courses.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-hint">
+            <i class="fa-regular fa-folder-open"></i>
+            <p>示例课程正在准备中。你可以先前往 <a href="catalog.html" style="color: var(--accent-blue);">学习目录</a> 按等级或目标选择内容。</p>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = courses.map(video => {
+        const hasVideo = courseHasVideo(video);
+        const statusBadge = hasVideo
+          ? `<span class="course-status" style="background: #10b981; color: #fff;"><i class="fa-solid fa-video"></i> 含视频</span>`
+          : `<span class="course-status" style="background: #f59e0b; color: #fff;"><i class="fa-solid fa-closed-captioning"></i> 字幕练习</span>`;
+        return `
+          <div class="video-card">
+            <div class="video-thumbnail" onclick="goToLearn(${video.id}, '${video.levelId}')">
+              <div class="play-icon"><i class="fa-solid fa-${hasVideo ? 'play' : 'pen-to-square'}"></i></div>
+              ${statusBadge}
+              <span style="font-size: 11px; color: white; background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 6px; position: absolute; bottom: 10px; right: 10px;"><i class="fa-solid fa-closed-captioning"></i> ${video.sentenceCount} 句字幕</span>
+            </div>
+            <div class="video-info">
+              <div class="video-title">${video.title}</div>
+              <div class="video-meta">
+                ${video.duration ? `<span><i class="fa-solid fa-clock"></i>${video.duration}</span>` : ''}
+                <span><i class="fa-solid fa-list-check"></i>${video.sentenceCount} 句</span>
+                <span style="color: ${hasVideo ? '#10b981' : '#f59e0b'};"><i class="fa-solid fa-${hasVideo ? 'video' : 'closed-captioning'}"></i>${hasVideo ? '视频+字幕' : '仅字幕'}</span>
+              </div>
+              <div class="video-tags">
+                <span class="video-tag" style="background: ${video.levelColor}20; color: ${video.levelColor};">${video.levelName}</span>
+                ${video.tags.map(tag => `<span class="video-tag">${tag}</span>`).join('')}
+              </div>
+              <div class="video-action">
+                <a href="learn.html?videoId=${video.id}&levelId=${video.levelId}" class="btn btn-secondary" style="padding: 10px 20px; font-size: 13px;">
+                  <i class="fa-solid fa-${hasVideo ? 'play' : 'pen-to-square'}"></i>${hasVideo ? '看视频学' : '练字幕'}
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function goToLearn(id, levelId = '') {
+      window.location.href = `learn.html?videoId=${id}${levelId ? '&levelId=' + levelId : ''}`;
+    }
+    renderVideoGrid();
+  </script>
+</body>
+</html>

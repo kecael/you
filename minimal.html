@@ -1,0 +1,928 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>句学 - 极简英语学习工具</title>
+  <link rel="stylesheet" href="assets/fontawesome/css/all.min.css" />
+  <style>
+    :root {
+      --bg-deep: #0a0a0f;
+      --bg-card: #12121a;
+      --bg-focus: #1a1a25;
+      --border: #2a2a3a;
+      --text-main: #f5f5f7;
+      --text-dim: #6a6a7a;
+      --accent: #ffb800;
+      --accent-soft: rgba(255, 184, 0, 0.15);
+      --success: #00c896;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* ========== 顶部极简栏 ========== */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    
+    .logo i { font-size: 20px; }
+    
+    .top-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: var(--bg-focus);
+      color: var(--text-dim);
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .icon-btn:hover {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    
+    /* ========== 主容器 ========== */
+    .main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px;
+      gap: 24px;
+    }
+    
+    /* ========== 视频区域 ========== */
+    .video-area {
+      background: var(--bg-card);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .video-wrapper {
+      aspect-ratio: 16/9;
+      background: #000;
+      position: relative;
+    }
+    
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    
+    /* ========== 当前句显示（核心焦点） ========== */
+    .current-sentence {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      position: relative;
+      border: 2px solid var(--border);
+      transition: border-color 0.3s;
+    }
+    
+    .current-sentence.active {
+      border-color: var(--accent);
+    }
+    
+    .sentence-number {
+      position: absolute;
+      top: 12px;
+      left: 16px;
+      font-size: 12px;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .sentence-english {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 16px;
+      line-height: 1.5;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    
+    .sentence-english:hover {
+      color: var(--accent);
+    }
+    
+    .sentence-chinese {
+      font-size: 16px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+    
+    .sentence-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    .action-btn {
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .action-btn.primary {
+      background: var(--accent);
+      color: var(--bg-deep);
+    }
+    
+    .action-btn.primary:hover {
+      transform: scale(1.05);
+    }
+    
+    .action-btn.secondary {
+      background: var(--bg-focus);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+    
+    .action-btn.secondary:hover {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    
+    /* ========== 解析面板（点击展开） ========== */
+    .analysis-panel {
+      background: var(--bg-card);
+      border-radius: 12px;
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.4s ease;
+    }
+    
+    .analysis-panel.show {
+      max-height: 600px;
+    }
+    
+    .analysis-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: var(--bg-focus);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .analysis-header h3 {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .analysis-header h3 i {
+      color: var(--accent);
+      font-size: 14px;
+    }
+    
+    .close-analysis {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      background: var(--bg-card);
+      color: var(--text-dim);
+      cursor: pointer;
+    }
+    
+    .analysis-body {
+      padding: 20px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    
+    .analysis-section {
+      margin-bottom: 20px;
+    }
+    
+    .analysis-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .vocab-grid {
+      display: grid;
+      gap: 8px;
+    }
+    
+    .vocab-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--bg-focus);
+      border-radius: 8px;
+    }
+    
+    .vocab-word {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    
+    .vocab-pos {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(0, 200, 150, 0.15);
+      color: var(--success);
+    }
+    
+    .vocab-meaning {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-left: auto;
+    }
+    
+    .grammar-item {
+      padding: 12px 16px;
+      background: linear-gradient(135deg, rgba(255, 184, 0, 0.05), transparent);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .grammar-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    
+    .grammar-text {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+    
+    /* ========== 控制栏 ========== */
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 16px;
+      background: var(--bg-card);
+      border-radius: 12px;
+    }
+    
+    .ctrl-btn {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      background: var(--bg-focus);
+      color: var(--text-dim);
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .ctrl-btn:hover {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    
+    .ctrl-btn.primary {
+      width: 56px;
+      height: 56px;
+      background: var(--accent);
+      color: var(--bg-deep);
+      font-size: 24px;
+      border-radius: 50%;
+    }
+    
+    .ctrl-btn.primary:hover {
+      transform: scale(1.1);
+    }
+    
+    .progress-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    
+    /* ========== 进度指示器 ========== */
+    .progress-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      padding: 16px 0;
+    }
+    
+    .progress-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: all 0.3s;
+    }
+    
+    .progress-dot.current {
+      background: var(--accent);
+      transform: scale(1.3);
+    }
+    
+    .progress-dot.done {
+      background: var(--success);
+    }
+    
+    /* ========== 状态指示 ========== */
+    .mode-indicator {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--bg-card);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+    
+    .mode-indicator i {
+      color: var(--accent);
+    }
+    
+    /* ========== 模态框 ========== */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      background: rgba(0,0,0,0.7);
+    }
+    
+    .modal.show {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: var(--bg-card);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 400px;
+      padding: 24px;
+    }
+    
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .modal-title i {
+      color: var(--accent);
+    }
+    
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .upload-zone:hover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    
+    .upload-zone i {
+      font-size: 32px;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    
+    .upload-zone p {
+      color: var(--text-dim);
+      font-size: 14px;
+    }
+    
+    input[type="file"] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="logo">
+      <i class="fa-solid fa-book-open"></i>
+      句学
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" id="uploadBtn" title="上传视频">
+        <i class="fa-solid fa-upload"></i>
+      </button>
+      <button class="icon-btn" id="settingsBtn" title="设置">
+        <i class="fa-solid fa-sliders"></i>
+      </button>
+    </div>
+  </div>
+  
+  <div class="main-container">
+    <div class="video-area">
+      <div class="video-wrapper">
+        <video id="video" preload="metadata"></video>
+      </div>
+    </div>
+    
+    <div class="current-sentence active" id="currentSentence">
+      <span class="sentence-number" id="sentenceNumber">第 1 句 / 共 10 句</span>
+      <div class="sentence-english" id="sentenceEnglish">Good morning! What can I get for you today?</div>
+      <div class="sentence-chinese" id="sentenceChinese">早上好！请问您想点些什么？</div>
+      <div class="sentence-actions">
+        <button class="action-btn primary" id="analyzeBtn">
+          <i class="fa-solid fa-magnifying-glass"></i> 查看解析
+        </button>
+        <button class="action-btn secondary" id="repeatBtn">
+          <i class="fa-solid fa-rotate-right"></i> 重听
+        </button>
+      </div>
+    </div>
+    
+    <div class="analysis-panel" id="analysisPanel">
+      <div class="analysis-header">
+        <h3><i class="fa-solid fa-sparkles"></i> 句子解析</h3>
+        <button class="close-analysis" id="closeAnalysis">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="analysis-body" id="analysisBody">
+        <!-- 动态内容 -->
+      </div>
+    </div>
+    
+    <div class="progress-indicator" id="progressIndicator">
+      <!-- 动态生成 -->
+    </div>
+    
+    <div class="controls">
+      <button class="ctrl-btn" id="prevBtn" title="上一句">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <button class="ctrl-btn primary" id="playBtn" title="播放/暂停">
+        <i class="fa-solid fa-play"></i>
+      </button>
+      <button class="ctrl-btn" id="nextBtn" title="下一句">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+      <div class="progress-info">
+        <span id="currentTime">00:00</span>
+        <span>/</span>
+        <span id="totalTime">00:00</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="mode-indicator" id="modeIndicator">
+    <i class="fa-solid fa-list-ol"></i>
+    <span>逐句学习模式</span>
+  </div>
+  
+  <div class="modal" id="uploadModal">
+    <div class="modal-content">
+      <div class="modal-title">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        上传学习素材
+      </div>
+      <div class="upload-zone" id="uploadZone">
+        <i class="fa-solid fa-video"></i>
+        <p>点击选择视频文件<br />或拖拽到此处</p>
+        <input type="file" id="fileInput" accept="video/*" />
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // 示例数据
+    const lessons = [
+      {
+        id: 'l1',
+        title: '咖啡厅对话',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+        sentences: [
+          {
+            id: 's1', start: 0, end: 4,
+            en: 'Good morning! What can I get for you today?',
+            zh: '早上好！请问您想点些什么？',
+            vocab: [
+              { word: 'Good morning', pos: '短语', meaning: '早上好' },
+              { word: 'get', pos: '动词', meaning: '获得/点餐' }
+            ],
+            grammar: [
+              { title: 'What can I get for you?', text: '服务行业常用礼貌问句，意为"我能为您点些什么？"' }
+            ]
+          },
+          {
+            id: 's2', start: 4, end: 8,
+            en: "Hi, I'd like a medium latte, please.",
+            zh: '你好，我想要一杯中杯拿铁。',
+            vocab: [
+              { word: 'medium', pos: '形容词', meaning: '中等的' },
+              { word: 'latte', pos: '名词', meaning: '拿铁咖啡' },
+              { word: "I'd like", pos: '短语', meaning: '我想要' }
+            ],
+            grammar: [
+              { title: 'I would like + 名词', text: '"I\'d like" 比 "I want" 更委婉礼貌' }
+            ]
+          },
+          {
+            id: 's3', start: 8, end: 12,
+            en: 'Sure! Would you like that hot or iced?',
+            zh: '好的！您想要热的还是冰的？',
+            vocab: [
+              { word: 'hot', pos: '形容词', meaning: '热的' },
+              { word: 'iced', pos: '形容词', meaning: '冰的' }
+            ],
+            grammar: [
+              { title: '选择疑问句 A or B?', text: '"Would you like A or B?" 提供选择，回答时直接选择其一' }
+            ]
+          },
+          {
+            id: 's4', start: 12, end: 16,
+            en: "Iced, please. And could you add an extra shot of espresso?",
+            zh: '冰的，谢谢。能再加一份浓缩咖啡吗？',
+            vocab: [
+              { word: 'extra', pos: '形容词', meaning: '额外的' },
+              { word: 'shot', pos: '名词', meaning: '一份(浓缩咖啡)' }
+            ],
+            grammar: [
+              { title: 'Could you + 动词?', text: '礼貌请求，比 "Can you" 更委婉' }
+            ]
+          },
+          {
+            id: 's5', start: 16, end: 20,
+            en: 'No problem. Anything else for you?',
+            zh: '没问题。还需要别的吗？',
+            vocab: [
+              { word: 'anything else', pos: '短语', meaning: '其他什么' }
+            ],
+            grammar: [
+              { title: 'Anything else?', text: '店员常用询问是否还需要其他东西' }
+            ]
+          },
+          {
+            id: 's6', start: 20, end: 25,
+            en: "Actually, can I also get a blueberry muffin?",
+            zh: '对了，我还能要一个蓝莓松饼吗？',
+            vocab: [
+              { word: 'actually', pos: '副词', meaning: '其实/对了' },
+              { word: 'muffin', pos: '名词', meaning: '松饼' }
+            ],
+            grammar: [
+              { title: 'actually 转换话题', text: '口语中用来突然想到补充某事' }
+            ]
+          },
+          {
+            id: 's7', start: 25, end: 30,
+            en: 'Absolutely! Your total comes to $6.75.',
+            zh: '当然可以！您一共是 6.75 美元。',
+            vocab: [
+              { word: 'total', pos: '名词', meaning: '总数' },
+              { word: 'comes to', pos: '短语', meaning: '总计' }
+            ],
+            grammar: []
+          },
+          {
+            id: 's8', start: 30, end: 35,
+            en: "Here's my credit card. Thank you so much!",
+            zh: '这是我的信用卡。非常感谢！',
+            vocab: [
+              { word: 'credit card', pos: '名词', meaning: '信用卡' }
+            ],
+            grammar: [
+              { title: 'Here + be 动词', text: '"Here is..." 递给别人东西时常用' }
+            ]
+          },
+          {
+            id: 's9', start: 35, end: 40,
+            en: 'You are welcome! Your order will be ready in a few minutes.',
+            zh: '不客气！您的餐点几分钟后就好。',
+            vocab: [
+              { word: 'order', pos: '名词', meaning: '订单' },
+              { word: 'ready', pos: '形容词', meaning: '准备好的' }
+            ],
+            grammar: [
+              { title: 'will be ready', text: '"will be + 形容词" 表示将来的状态' }
+            ]
+          },
+          {
+            id: 's10', start: 40, end: 45,
+            en: 'Great, I will wait over there. Have a nice day!',
+            zh: '好的，我在那边等。祝你今天愉快！',
+            vocab: [
+              { word: 'Have a nice day', pos: '短语', meaning: '祝你今天愉快' }
+            ],
+            grammar: []
+          }
+        ]
+      }
+    ];
+    
+    // 状态
+    let currentLesson = lessons[0];
+    let currentIndex = 0;
+    let isPlaying = false;
+    
+    // DOM
+    const video = document.getElementById('video');
+    const sentenceEnglish = document.getElementById('sentenceEnglish');
+    const sentenceChinese = document.getElementById('sentenceChinese');
+    const sentenceNumber = document.getElementById('sentenceNumber');
+    const currentSentence = document.getElementById('currentSentence');
+    const analysisPanel = document.getElementById('analysisPanel');
+    const analysisBody = document.getElementById('analysisBody');
+    const playBtn = document.getElementById('playBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const repeatBtn = document.getElementById('repeatBtn');
+    const closeAnalysis = document.getElementById('closeAnalysis');
+    const progressIndicator = document.getElementById('progressIndicator');
+    const currentTimeEl = document.getElementById('currentTime');
+    const totalTimeEl = document.getElementById('totalTime');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadModal = document.getElementById('uploadModal');
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    
+    // 格式化时间
+    function formatTime(s) {
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    }
+    
+    // 更新当前句子
+    function updateSentence() {
+      const s = currentLesson.sentences[currentIndex];
+      if (!s) return;
+      
+      sentenceEnglish.textContent = s.en;
+      sentenceChinese.textContent = s.zh;
+      sentenceNumber.textContent = `第 ${currentIndex + 1} 句 / 共 ${currentLesson.sentences.length} 句`;
+      
+      // 更新进度指示器
+      renderProgressDots();
+      
+      // 更新时间
+      currentTimeEl.textContent = formatTime(s.start);
+    }
+    
+    // 渲染进度点
+    function renderProgressDots() {
+      progressIndicator.innerHTML = '';
+      currentLesson.sentences.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'progress-dot';
+        if (i < currentIndex) dot.classList.add('done');
+        if (i === currentIndex) dot.classList.add('current');
+        dot.addEventListener('click', () => goToSentence(i));
+        progressIndicator.appendChild(dot);
+      });
+    }
+    
+    // 跳转到指定句子
+    function goToSentence(index) {
+      currentIndex = index;
+      const s = currentLesson.sentences[index];
+      video.currentTime = s.start;
+      updateSentence();
+      hideAnalysis();
+      
+      // 自动播放该句
+      video.play();
+      isPlaying = true;
+      updatePlayIcon();
+    }
+    
+    // 显示解析
+    function showAnalysis() {
+      const s = currentLesson.sentences[currentIndex];
+      if (!s) return;
+      
+      let html = '';
+      
+      if (s.vocab && s.vocab.length > 0) {
+        html += `<div class="analysis-section">
+          <div class="section-title"><i class="fa-solid fa-book"></i> 词汇</div>
+          <div class="vocab-grid">
+            ${s.vocab.map(v => `
+              <div class="vocab-item">
+                <span class="vocab-word">${v.word}</span>
+                <span class="vocab-pos">${v.pos}</span>
+                <span class="vocab-meaning">${v.meaning}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>`;
+      }
+      
+      if (s.grammar && s.grammar.length > 0) {
+        html += `<div class="analysis-section">
+          <div class="section-title"><i class="fa-solid fa-lightbulb"></i> 语法</div>
+          ${s.grammar.map(g => `
+            <div class="grammar-item">
+              <div class="grammar-title">${g.title}</div>
+              <div class="grammar-text">${g.text}</div>
+            </div>
+          `).join('')}
+        </div>`;
+      }
+      
+      analysisBody.innerHTML = html || '<p style="color: var(--text-dim); text-align: center;">暂无详细解析</p>';
+      analysisPanel.classList.add('show');
+    }
+    
+    // 隐藏解析
+    function hideAnalysis() {
+      analysisPanel.classList.remove('show');
+    }
+    
+    // 更新播放图标
+    function updatePlayIcon() {
+      const icon = playBtn.querySelector('i');
+      icon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+    }
+    
+    // 播放/暂停
+    function togglePlay() {
+      if (isPlaying) {
+        video.pause();
+      } else {
+        video.play();
+      }
+      isPlaying = !isPlaying;
+      updatePlayIcon();
+    }
+    
+    // 上一句
+    function prevSentence() {
+      if (currentIndex > 0) {
+        goToSentence(currentIndex - 1);
+      }
+    }
+    
+    // 下一句
+    function nextSentence() {
+      if (currentIndex < currentLesson.sentences.length - 1) {
+        goToSentence(currentIndex + 1);
+      }
+    }
+    
+    // 重听当前句
+    function repeatCurrent() {
+      const s = currentLesson.sentences[currentIndex];
+      video.currentTime = s.start;
+      video.play();
+      isPlaying = true;
+      updatePlayIcon();
+    }
+    
+    // 视频时间更新 - 自动暂停在句子结束处
+    video.addEventListener('timeupdate', () => {
+      const s = currentLesson.sentences[currentIndex];
+      if (s && video.currentTime >= s.end && isPlaying) {
+        video.pause();
+        isPlaying = false;
+        updatePlayIcon();
+      }
+    });
+    
+    video.addEventListener('loadedmetadata', () => {
+      totalTimeEl.textContent = formatTime(video.duration);
+    });
+    
+    // 事件绑定
+    playBtn.addEventListener('click', togglePlay);
+    prevBtn.addEventListener('click', prevSentence);
+    nextBtn.addEventListener('click', nextSentence);
+    analyzeBtn.addEventListener('click', showAnalysis);
+    repeatBtn.addEventListener('click', repeatCurrent);
+    closeAnalysis.addEventListener('click', hideAnalysis);
+    sentenceEnglish.addEventListener('click', showAnalysis);
+    
+    // 上传
+    uploadBtn.addEventListener('click', () => uploadModal.classList.add('show'));
+    uploadModal.addEventListener('click', (e) => {
+      if (e.target === uploadModal) uploadModal.classList.remove('show');
+    });
+    uploadZone.addEventListener('click', () => fileInput.click());
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.style.borderColor = 'var(--accent)';
+    });
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.style.borderColor = 'var(--border)';
+    });
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('video/')) {
+        handleFile(file);
+      }
+    });
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+    });
+    
+    function handleFile(file) {
+      uploadModal.classList.remove('show');
+      // 模拟处理
+      alert('视频已上传！处理完成后将自动加载学习内容。\n（当前为演示模式）');
+    }
+    
+    // 初始化
+    video.src = currentLesson.videoUrl;
+    updateSentence();
+    
+    // 键盘控制
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      switch (e.code) {
+        case 'Space': togglePlay(); break;
+        case 'ArrowLeft': prevSentence(); break;
+        case 'ArrowRight': nextSentence(); break;
+        case 'KeyR': repeatCurrent(); break;
+        case 'KeyA': showAnalysis(); break;
+        case 'Escape': hideAnalysis(); uploadModal.classList.remove('show'); break;
+      }
+    });
+  </script>
+</body>
+</html>
